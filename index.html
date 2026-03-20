@@ -99,22 +99,9 @@ display:flex;align-items:center;gap:8px;padding:0 12px;
 .page{padding:14px 12px;max-width:680px;margin:0 auto}
 
 /* ── HOME ── */
-.countdown{background:linear-gradient(135deg,var(–c2),var(–c3));border:1px solid var(–bdr);border-radius:var(–r);padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
-.countdown::before{content:‘63’;font-family:var(–serif);position:absolute;right:-6px;bottom:-18px;font-size:100px;color:rgba(240,165,0,.05);line-height:1;pointer-events:none}
-.cd-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
-.cd-head{font-family:var(–serif);font-size:clamp(16px,4vw,21px);line-height:1.25;color:var(–tx)}
-.cd-head em{font-style:italic;color:var(–am)}
-.cd-set{background:var(–am2);border:1px solid rgba(240,165,0,.3);color:var(–am);border-radius:var(–r2);padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;touch-action:manipulation}
-.cd-tiles{display:flex;gap:7px}
-.cd-tile{background:var(–c4);border:1px solid var(–bdr);border-radius:var(–r2);padding:9px 12px;text-align:center;flex:1}
-.cd-tile b{display:block;font-family:var(–serif);font-size:26px;color:var(–am);line-height:1}
-.cd-tile span{display:block;font-size:9px;color:var(–tx4);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
-.cd-tile.urg b{color:var(–rd)}
+/* countdown replaced by hero-bar */
 
-.daily-box{background:var(–c2);border:1px solid var(–bdr);border-radius:var(–r);padding:13px;margin-bottom:12px}
-.daily-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
-.daily-title{font-size:12px;font-weight:800;color:var(–tx);display:flex;align-items:center;gap:7px}
-.daily-bonus{font-size:10px;background:var(–am2);color:var(–am);padding:2px 7px;border-radius:99px;font-weight:700}
+/* daily-box replaced by daily-toggle */
 .dc-list{display:flex;flex-direction:column;gap:6px}
 .dc-item{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(–c3);border:1px solid var(–bdr);border-radius:var(–r2)}
 .dc-item.done{background:var(–gn2);border-color:rgba(34,212,122,.3)}
@@ -126,24 +113,9 @@ display:flex;align-items:center;gap:8px;padding:0 12px;
 .dc-pbar-fill{height:2px;border-radius:99px;background:var(–am);transition:width .3s}
 .dc-xp{font-size:10px;font-weight:800;color:var(–am);flex-shrink:0}
 
-.hs-bar{background:linear-gradient(135deg,rgba(240,165,0,.1),rgba(255,100,0,.06));border:1px solid rgba(240,165,0,.25);border-radius:var(–r);padding:10px 13px;margin-bottom:12px;display:none;align-items:center;gap:9px}
-.hs-bar.show{display:flex}
-.hs-fire{font-size:22px}
-.hs-info{flex:1}
-.hs-title{font-size:12px;font-weight:800;color:var(–am)}
-.hs-sub{font-size:10px;color:var(–tx3)}
-.hs-mult{font-family:var(–serif);font-size:20px;font-weight:700;color:var(–am);flex-shrink:0}
+/* hs-bar hidden in new design */
 
-.quick{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
-.qcard{background:var(–c2);border:1px solid var(–bdr);border-radius:var(–r);padding:12px;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;gap:5px;transition:transform .12s}
-.qcard:active{transform:scale(.96)}
-.qcard.am{border-color:rgba(240,165,0,.3);background:var(–am3)}
-.qcard.bl{border-color:rgba(91,156,255,.22);background:var(–bl3)}
-.qcard.pu{border-color:rgba(167,139,255,.22);background:rgba(167,139,255,.06)}
-.qcard.gn{border-color:rgba(34,212,122,.22);background:var(–gn3)}
-.qcard-ico{font-size:19px}
-.qcard-title{font-size:12px;font-weight:800;color:var(–tx)}
-.qcard-sub{font-size:10px;color:var(–tx3);line-height:1.4}
+/* quick-strip replaced by home-actions */
 
 .sec-lbl{font-size:10px;font-weight:800;color:var(–tx4);text-transform:uppercase;letter-spacing:.09em;margin-bottom:7px}
 .sec-grid{display:flex;flex-direction:column;gap:7px}
@@ -358,6 +330,86 @@ display:flex;align-items:center;gap:8px;padding:0 12px;
 ::-webkit-scrollbar-thumb{background:var(–bdr);border-radius:2px}
 @media(min-width:540px){.sec-grid{display:grid;grid-template-columns:1fr 1fr}.quick{grid-template-columns:repeat(4,1fr)}.stat-grid{grid-template-columns:repeat(4,1fr)}.page{padding:18px 16px}}
 @media(min-width:860px){.sec-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* ── CLEAN HOME ────────────────────────────────────────────── */
+.hero-bar{
+display:flex;align-items:center;justify-content:space-between;
+padding:16px;margin-bottom:14px;
+background:linear-gradient(135deg,#23263a,#2a2e48);
+border:1px solid #3a4060;border-radius:var(–r);
+}
+.hero-title{font-family:var(–serif);font-size:22px;color:#f0f4ff;line-height:1.2;margin-bottom:4px}
+.hero-title em{color:#f5a800;font-style:italic}
+.hero-sub{font-size:12px;color:#9098c0}
+.hero-countdown{
+text-align:center;cursor:pointer;flex-shrink:0;
+background:#1e2035;border:1px solid #3a4060;border-radius:var(–r2);
+padding:10px 14px;min-width:64px;
+}
+.hero-cd-num{font-family:var(–serif);font-size:28px;color:#f5a800;line-height:1;font-weight:700}
+.hero-cd-lbl{font-size:9px;color:#7078a0;text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+.home-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.action-btn{
+display:flex;align-items:center;justify-content:center;gap:8px;
+padding:14px 12px;border:none;border-radius:var(–r);
+font-family:inherit;font-size:14px;font-weight:800;
+cursor:pointer;touch-action:manipulation;min-height:52px;
+transition:transform .12s,opacity .12s;
+}
+.action-btn:active{transform:scale(.96);opacity:.9}
+.action-drill{background:#f5a800;color:#1a1600}
+.action-weak{background:#23263a;border:2px solid #6aaaff;color:#6aaaff}
+.action-ico{font-size:18px}
+.action-lbl{font-size:13px;font-weight:800}
+
+.sec-lbl{font-size:10px;font-weight:800;color:#7078a0;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+
+.daily-toggle{
+display:flex;align-items:center;justify-content:space-between;
+padding:12px 14px;margin-top:14px;
+background:#1e2235;border:1px solid #3a4060;border-radius:var(–r);
+font-size:13px;font-weight:700;color:#c0c8e8;cursor:pointer;
+touch-action:manipulation;
+}
+.daily-toggle-ico{font-size:16px;color:#7078a0;transition:transform .2s}
+.daily-panel{padding:10px 0 4px}
+
+/* ── CLEAN DRAWER ──────────────────────────────────────────── */
+.dr-player-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.dr-player-info{flex:1;min-width:0}
+.dr-streak-pill{
+background:#1e2035;border:1px solid #3a4060;border-radius:var(–r2);
+padding:5px 10px;font-size:13px;font-weight:800;color:#f5a800;
+flex-shrink:0;white-space:nowrap;
+}
+.dr-sync-row{
+display:flex;align-items:center;justify-content:space-between;
+margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #3a4060;
+}
+.sync-btn{
+background:rgba(106,170,255,.15);border:1px solid #6aaaff;color:#6aaaff;
+border-radius:var(–r2);padding:5px 12px;font-size:11px;font-weight:800;
+cursor:pointer;font-family:inherit;touch-action:manipulation;
+}
+
+/* ── SECTION CARDS: cleaner ────────────────────────────────── */
+.sec-card{
+background:#1e2235;border:1px solid #3a4060;border-radius:var(–r);
+padding:14px;cursor:pointer;touch-action:manipulation;
+position:relative;overflow:hidden;transition:transform .12s;
+margin-bottom:8px;
+}
+.sec-card::before{content:’’;position:absolute;left:0;top:0;bottom:0;width:4px;background:var(–cc,var(–bl));border-radius:var(–r) 0 0 var(–r)}
+.sec-card:active{transform:scale(.985)}
+.sc-title{font-size:15px;font-weight:800;color:#f0f4ff;margin-bottom:3px;line-height:1.3}
+.sc-desc{font-size:12px;color:#9098c0;line-height:1.4;margin-bottom:8px}
+.sc-chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:10px;color:#9098c0;background:#252840;border:1px solid #3a4060;padding:3px 8px;border-radius:5px;font-weight:600}
+.chip-gd{background:rgba(255,215,0,.12);color:#ffd700;border-color:rgba(255,215,0,.25)}
+
+/* ── TOPBAR: less cluttered ────────────────────────────────── */
+.bar-streak{font-size:12px;font-weight:800;color:#f5a800;padding:3px 8px;background:#1e2035;border:1px solid #3a4060;border-radius:var(–r2)}
 </style>
 
 </head>
@@ -370,52 +422,77 @@ display:flex;align-items:center;gap:8px;padding:0 12px;
 <!-- DRAWER -->
 
 <div class="drawer" id="drawer">
+
+  <!-- Header -->
+
   <div class="dr-head">
     <div class="dr-brand">63 Pass</div>
     <button class="dr-x" onclick="closeDrawer()">✕</button>
   </div>
+
+  <!-- Player summary: compact single row -->
+
   <div class="dr-player">
-    <div class="dr-avatar" id="dr-avatar">📋</div>
-    <div class="dr-lv" id="dr-lv">Level 1</div>
-    <div class="dr-title" id="dr-title">Compliance Intern</div>
+    <div class="dr-player-row">
+      <div class="dr-avatar" id="dr-avatar">📋</div>
+      <div class="dr-player-info">
+        <div class="dr-lv" id="dr-lv">Level 1</div>
+        <div class="dr-title" id="dr-title">Compliance Intern</div>
+      </div>
+      <div class="dr-streak-pill">
+        <span id="dr-streak-v">0</span> 🔥
+      </div>
+    </div>
     <div class="dr-xprow"><span>XP</span><span id="dr-xp-label">0 / 200</span></div>
     <div class="xp-track"><div class="xp-fill" id="dr-xp-fill" style="width:0%"></div></div>
-    <div class="dr-stats">
-      <div class="dr-stat"><b id="dr-streak-v">0</b><span>Streak</span></div>
-      <div class="dr-stat"><b id="dr-correct-v">0</b><span>Correct</span></div>
-      <div class="dr-stat"><b id="dr-acc-v">—</b><span>Accuracy</span></div>
-    </div>
+    <!-- Hidden but preserved for JS -->
+    <span id="dr-correct-v" style="display:none">0</span>
+    <span id="dr-acc-v" style="display:none">—</span>
+    <span id="dr-sec-pct" style="display:none">0%</span>
+    <div id="dr-sec-bar" style="display:none"></div>
   </div>
-  <div class="dr-prog">
-    <div class="dr-prog-row"><span>Sections Complete</span><span id="dr-sec-pct">0%</span></div>
-    <div class="pbar"><div class="pbar-fill" id="dr-sec-bar" style="width:0%"></div></div>
-  </div>
+
+  <!-- Nav -->
+
   <nav class="dr-nav">
-    <div class="nav-item on" id="nav-home" onclick="gotoHome();closeDrawer()"><div class="nav-item-ico">🏠</div><div class="nav-item-lbl">Home</div></div>
-    <div class="nav-item" id="nav-drill" onclick="startDrill('random');closeDrawer()"><div class="nav-item-ico">⚡</div><div class="nav-item-lbl">5-Min Drill</div></div>
+    <div class="nav-item on" id="nav-home" onclick="gotoHome();closeDrawer()">
+      <div class="nav-item-ico">🏠</div><div class="nav-item-lbl">Home</div>
+    </div>
+    <div class="nav-item" id="nav-prog" onclick="gotoProg();closeDrawer()">
+      <div class="nav-item-ico">📊</div><div class="nav-item-lbl">My Progress</div>
+    </div>
+    <div class="nav-item" id="nav-drill" onclick="startDrill('random');closeDrawer()">
+      <div class="nav-item-ico">⚡</div><div class="nav-item-lbl">5-Min Drill</div>
+    </div>
+    <div class="nav-item" onclick="gotoCases();closeDrawer()">
+      <div class="nav-item-ico">🏛️</div><div class="nav-item-lbl">Case Studies</div>
+    </div>
     <div class="dr-sep">Sections</div>
     <div id="dr-sec-nav"></div>
-    <div class="nav-item" id="nav-prog" onclick="gotoProg();closeDrawer()" style="margin-top:4px"><div class="nav-item-ico">📊</div><div class="nav-item-lbl">My Progress</div></div>
   </nav>
+
+  <!-- Footer: settings only -->
+
   <div class="dr-foot">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding:8px 0;border-bottom:1px solid var(--bdr)">
-      <div style="font-size:11px;color:var(--tx3);display:flex;align-items:center;gap:6px">
-        <div id="sync-dot-drawer" style="width:7px;height:7px;border-radius:50%;background:var(--tx4)"></div>
-        <span id="sync-status-txt">Cloud sync ready</span>
+    <div class="dr-sync-row">
+      <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#9098c0">
+        <div id="sync-dot-drawer" style="width:7px;height:7px;border-radius:50%;background:#9098c0;flex-shrink:0"></div>
+        <span id="sync-status-txt">Sync ready</span>
       </div>
-      <button onclick="syncToCloud(false)" style="background:var(--bl2);border:1px solid var(--bl);color:var(--bl);border-radius:var(--r2);padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;touch-action:manipulation">↑ Sync Now</button>
+      <button onclick="syncToCloud(false)" class="sync-btn">↑ Sync</button>
     </div>
     <div class="tog-row">
       <button class="tog" id="tog-dys" onclick="toggleA11y('dys')">OpenDyslexic</button>
       <button class="tog on" id="tog-wsp" onclick="toggleA11y('wsp')">Wide Space</button>
     </div>
     <div class="tog-row">
-      <button class="tog" id="tog-fs" onclick="cycleFont()">Text: Normal</button>
+      <button class="tog" id="tog-fs" onclick="cycleFont()">Text Size</button>
       <button class="tog" id="tog-hic" onclick="toggleA11y('hic')">Hi Contrast</button>
     </div>
     <div class="voice-lbl">🔊 Voice</div>
     <select class="voice-sel" id="voice-sel" onchange="setVoice(this.value)"><option>Loading…</option></select>
   </div>
+
 </div>
 
 <!-- TOPBAR -->
@@ -444,43 +521,69 @@ display:flex;align-items:center;gap:8px;padding:0 12px;
 <!-- HOME PAGE -->
 
 <div class="page" id="v-home">
-  <div class="countdown">
-    <div class="cd-top">
-      <div class="cd-head">Pass the <em>Series 63.</em><br>You've got this.</div>
-      <button class="cd-set" onclick="openDateModal()">📅 Set Date</button>
+
+  <!-- HERO: exam countdown + one-line status -->
+
+  <div class="hero-bar">
+    <div class="hero-left">
+      <div class="hero-title">Series 63 <em>Pass Prep</em></div>
+      <div class="hero-sub" id="hero-sub">Tap a section to start</div>
     </div>
-    <div class="cd-tiles">
-      <div class="cd-tile" id="cd-d-tile"><b id="cd-d">—</b><span>Days</span></div>
-      <div class="cd-tile"><b id="cd-h">—</b><span>Hours</span></div>
-      <div class="cd-tile"><b id="cd-m">—</b><span>Min</span></div>
+    <div class="hero-countdown" onclick="openDateModal()" id="hero-cd">
+      <div class="hero-cd-num" id="cd-d">—</div>
+      <div class="hero-cd-lbl">days left</div>
     </div>
   </div>
 
-  <div class="daily-box">
-    <div class="daily-head">
-      <div class="daily-title">⚔️ Daily Challenges <span class="daily-bonus">+100 XP for all 3</span></div>
-    </div>
+  <!-- HIDDEN: preserve IDs needed by JS countdown -->
+
+<span id="cd-h" style="display:none"></span>
+<span id="cd-m" style="display:none"></span>
+
+  <div id="cd-d-tile" style="display:none"></div>
+
+  <!-- QUICK ACTIONS: just two, always visible -->
+
+  <div class="home-actions">
+    <button class="action-btn action-drill" onclick="startDrill('random')">
+      <span class="action-ico">⚡</span>
+      <span class="action-lbl">5-Min Drill</span>
+    </button>
+    <button class="action-btn action-weak" id="action-weak-btn" onclick="startDrill('weak')">
+      <span class="action-ico">🎯</span>
+      <span class="action-lbl" id="qc-weak-sub">Weak Spots</span>
+    </button>
+  </div>
+
+  <!-- PRESERVE: hidden elements JS needs -->
+
+  <div id="hs-bar" style="display:none">
+    <span id="hs-count">0</span>
+    <span id="hs-sub"></span>
+    <span id="hs-mult">1×</span>
+    <span id="hs-fire"></span>
+    <span id="hs-info"></span>
+    <span id="hs-title"></span>
+  </div>
+  <div id="mult-badge" style="display:none"></div>
+  <div id="qc-acc" style="display:none"></div>
+  <div id="qc-weak" style="display:none"></div>
+
+  <!-- SECTIONS: the main content -->
+
+  <div class="sec-lbl">Study Sections</div>
+  <div class="sec-grid" id="home-grid"></div>
+
+  <!-- DAILY CHALLENGES: collapsed by default, expandable -->
+
+  <div class="daily-toggle" onclick="toggleDailyPanel()">
+    <span>⚔️ Daily Challenges</span>
+    <span class="daily-toggle-ico" id="daily-toggle-ico">▾</span>
+  </div>
+  <div class="daily-panel hidden" id="daily-panel">
     <div class="dc-list" id="dc-list"></div>
   </div>
 
-  <div class="hs-bar" id="hs-bar">
-    <div class="hs-fire">🔥</div>
-    <div class="hs-info">
-      <div class="hs-title">HOT STREAK — <span id="hs-count">0</span> correct in a row!</div>
-      <div class="hs-sub" id="hs-sub">Keep it going for bonus XP</div>
-    </div>
-    <div class="hs-mult" id="hs-mult">1×</div>
-  </div>
-
-  <div class="quick">
-    <div class="qcard am" onclick="startDrill('random')"><div class="qcard-ico">⚡</div><div class="qcard-title">5-Min Drill</div><div class="qcard-sub">10 quick Qs</div></div>
-    <div class="qcard bl" id="qc-weak" onclick="startDrill('weak')"><div class="qcard-ico">🎯</div><div class="qcard-title">Weak Spots</div><div class="qcard-sub" id="qc-weak-sub">No weak spots yet</div></div>
-    <div class="qcard pu" onclick="gotoCases()"><div class="qcard-ico">🏛️</div><div class="qcard-title">Case Studies</div><div class="qcard-sub">Real SEC busts</div></div>
-    <div class="qcard gn" onclick="gotoProg()"><div class="qcard-ico">📊</div><div class="qcard-title">Progress</div><div class="qcard-sub" id="qc-acc">Start studying!</div></div>
-  </div>
-
-  <div class="sec-lbl">Sections</div>
-  <div class="sec-grid" id="home-grid"></div>
 </div>
 
 <!-- STUDY PAGE -->
@@ -1361,6 +1464,22 @@ function buildAll() {
   tickCountdown();
   updateWeakUI();
   updateHSBanner();
+  updateHeroSub();
+}
+
+function updateHeroSub() {
+  var el = document.getElementById('hero-sub');
+  if (!el) return;
+  var done = DATA.filter(function(s) { return G.scores[s.id]; }).length;
+  var total = DATA.length;
+  var acc = G.totalAns > 0 ? Math.round((G.totalCor / G.totalAns) * 100) : 0;
+  if (done === 0) {
+    el.textContent = 'Tap a section below to start studying';
+  } else if (done === total) {
+    el.textContent = 'All sections complete · ' + acc + '% accuracy';
+  } else {
+    el.textContent = done + ' of ' + total + ' sections done · ' + acc + '% accuracy';
+  }
 }
 
 // ── HUD ──────────────────────────────────────────────────────
@@ -1501,18 +1620,16 @@ function getMult() {
 function updateHSBanner() {
   var c = G.hotStreak.count || 0;
   var m = getMult();
-  var bar = document.getElementById('hs-bar');
+  // Hot streak shown in topbar streak pill and quiz mult badge only
+  setText('hs-count', c);
+  setText('hs-mult', m + 'x');
   var badge = document.getElementById('mult-badge');
-  if (c >= 3) {
-    if (bar) { bar.className = 'hs-bar show'; setText('hs-count', c); setText('hs-mult', m + '×'); }
-    if (badge) { badge.className = 'mult-badge show'; badge.textContent = '🔥 ' + m + '× XP'; }
-    var next = c >= 9 ? 4 : c >= 6 ? 3 : 2;
-    var need = c >= 9 ? 0 : c >= 6 ? 9 - c : c >= 3 ? 6 - c : 3 - c;
-    setText('hs-sub', 'Keep going for ' + need + ' more to reach ' + next + '× XP');
-  } else {
-    if (bar) bar.className = 'hs-bar';
-    if (badge) badge.className = 'mult-badge';
+  if (badge) {
+    badge.className = c >= 3 ? 'mult-badge show' : 'mult-badge';
+    badge.textContent = '🔥 ' + m + '× XP';
   }
+  // Update streak pill in topbar
+  setText('bar-streak', '🔥 ' + c);
 }
 
 function recordAnswer(correct, srcEl) {
@@ -3332,6 +3449,15 @@ function addClass(id, cls) {
 function removeClass(id, cls) {
   var el = document.getElementById(id);
   if (el) el.className = el.className.replace(new RegExp('\\b' + cls + '\\b', 'g'), '').trim();
+}
+
+function toggleDailyPanel() {
+  var panel = document.getElementById('daily-panel');
+  var ico = document.getElementById('daily-toggle-ico');
+  if (!panel) return;
+  var isHidden = panel.className.indexOf('hidden') !== -1;
+  panel.className = isHidden ? 'daily-panel' : 'daily-panel hidden';
+  if (ico) ico.textContent = isHidden ? '▴' : '▾';
 }
 </script>
 
