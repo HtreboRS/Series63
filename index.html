@@ -411,37 +411,24 @@ margin-bottom:8px;
 /* ── TOPBAR: less cluttered ────────────────────────────────── */
 .bar-streak{font-size:12px;font-weight:800;color:#f5a800;padding:3px 8px;background:#1e2035;border:1px solid #3a4060;border-radius:var(–r2)}
 
-/* ── LESSON BULLETS ──────────────────────────────────── */
-.lesson-bullets{
-margin:0 0 14px 0;padding:0;list-style:none;
-display:flex;flex-direction:column;gap:8px;
+/* ── LESSON TEXT ─────────────────────────────────────── */
+.lesson-p{
+margin-bottom:16px;
+font-size:var(–fs);
+line-height:var(–lh);
+color:#d8e0f8;
+word-wrap:break-word;
+overflow-wrap:break-word;
 }
-.lesson-bullet{
-display:flex;align-items:baseline;gap:10px;
-font-size:var(–fs);line-height:var(–lh);color:#dde4ff;
-padding:9px 12px;
-background:#1e2235;
-border:1px solid #323a58;
-border-left:3px solid #6aaaff;
-border-radius:0 var(–r2) var(–r2) 0;
-}
-.lesson-bullet::before{
-content:’›’;color:#6aaaff;font-size:16px;font-weight:800;
-flex-shrink:0;margin-top:1px;line-height:1;
-}
-.lesson-intro{
-font-size:var(–fs);line-height:var(–lh);color:#c8d0ee;
-margin-bottom:12px;padding:11px 13px;
-background:rgba(106,170,255,.07);
-border-radius:var(–r2);border-left:3px solid #6aaaff44;
-}
+.lesson-p:last-child{margin-bottom:0}
 .key-term{
-color:#f5c842;font-weight:700;
+font-weight:800;
+color:#f0c040;
 }
-.key-term.lit{background:#ffe033;color:#0a0a0a;border-radius:2px}
-.key-term.past{color:#b8a030}
+.key-term.lit{background:#ffe033;color:#0a0a0a;border-radius:2px;padding:0 2px}
+.key-term.past{color:#b8952a;font-weight:800}
 .w.lit{background:#ffe033;color:#0a0a0a;border-radius:2px;padding:0 1px}
-.w.past{color:#7080a0}
+.w.past{color:#6070a0}
 </style>
 
 </head>
@@ -2137,15 +2124,7 @@ function isKeyTerm(word) {
 }
 
 // Split a paragraph into bullet-friendly sentences
-function splitToBullets(para) {
-  // Split on '. ' or '; ' but keep the delimiter
-  var bullets = [];
-  // Split on sentence boundaries
-  var raw = para.split(/(?<=[.;])\s+(?=[A-Z0-9])/);
-  // If only one sentence or very short, return as-is
-  if (raw.length <= 1 || para.length < 120) return [para];
-  return raw.filter(function(s) { return s.trim().length > 0; });
-}
+// splitToBullets removed — paragraphs stay intact
 
 function renderSubLesson() {
   var s = DATA[curSec];
@@ -2175,66 +2154,37 @@ function renderSubLesson() {
   var box = document.createElement('div');
   box.className = 'lesson-box';
 
-  // Topic heading
-  var h = document.createElement('div');
-  h.className = 'lesson-h';
-  h.textContent = sb.title;
-  box.appendChild(h);
+  // Heading
+  var heading = document.createElement('div');
+  heading.className = 'lesson-h';
+  heading.textContent = sb.title;
+  box.appendChild(heading);
 
   var globalW = 0;
 
+  // Each paragraph stays as ONE flowing block — no splitting
+  // Key terms are bolded inline within the paragraph
   sb.paras.forEach(function(para, paraIdx) {
-    // First paragraph is always a full paragraph (intro)
-    // Subsequent paragraphs get broken into bullets if long enough
-    var bullets = (paraIdx > 0) ? splitToBullets(para) : [para];
-    var isMultiBullet = bullets.length > 1;
+    var p = document.createElement('p');
+    p.className = 'lesson-p';
 
-    if (isMultiBullet) {
-      // Render as a bullet list
-      var ul = document.createElement('ul');
-      ul.className = 'lesson-bullets';
-      bullets.forEach(function(bullet) {
-        var li = document.createElement('li');
-        li.className = 'lesson-bullet';
-        var tokens = bullet.trim().split(/(\s+)/);
-        tokens.forEach(function(tok) {
-          if (/^\s+$/.test(tok)) {
-            li.appendChild(document.createTextNode(tok));
-          } else {
-            var span = document.createElement('span');
-            var isKey = isKeyTerm(tok);
-            span.className = isKey ? 'w key-term' : 'w';
-            span.setAttribute('data-wi', globalW);
-            span.textContent = tok;
-            wordSpans.push(span);
-            li.appendChild(span);
-            globalW++;
-          }
-        });
-        ul.appendChild(li);
-      });
-      box.appendChild(ul);
-    } else {
-      // Render as a paragraph
-      var p = document.createElement('p');
-      p.className = paraIdx === 0 ? 'lesson-p lesson-intro' : 'lesson-p';
-      var tokens = para.split(/(\s+)/);
-      tokens.forEach(function(tok) {
-        if (/^\s+$/.test(tok)) {
-          p.appendChild(document.createTextNode(tok));
-        } else {
-          var span = document.createElement('span');
-          var isKey = isKeyTerm(tok);
-          span.className = isKey ? 'w key-term' : 'w';
-          span.setAttribute('data-wi', globalW);
-          span.textContent = tok;
-          wordSpans.push(span);
-          p.appendChild(span);
-          globalW++;
-        }
-      });
-      box.appendChild(p);
-    }
+    var tokens = para.split(/(\s+)/);
+    tokens.forEach(function(tok) {
+      if (/^\s+$/.test(tok)) {
+        p.appendChild(document.createTextNode(tok));
+      } else {
+        var span = document.createElement('span');
+        var key = isKeyTerm(tok);
+        // Bold key terms, highlight with audio
+        span.className = key ? 'w key-term' : 'w';
+        span.setAttribute('data-wi', globalW);
+        span.textContent = tok;
+        wordSpans.push(span);
+        p.appendChild(span);
+        globalW++;
+      }
+    });
+    box.appendChild(p);
   });
 
   body.appendChild(box);
