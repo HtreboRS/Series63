@@ -410,6 +410,38 @@ margin-bottom:8px;
 
 /* ── TOPBAR: less cluttered ────────────────────────────────── */
 .bar-streak{font-size:12px;font-weight:800;color:#f5a800;padding:3px 8px;background:#1e2035;border:1px solid #3a4060;border-radius:var(–r2)}
+
+/* ── LESSON BULLETS ──────────────────────────────────── */
+.lesson-bullets{
+margin:0 0 14px 0;padding:0;list-style:none;
+display:flex;flex-direction:column;gap:8px;
+}
+.lesson-bullet{
+display:flex;align-items:baseline;gap:10px;
+font-size:var(–fs);line-height:var(–lh);color:#dde4ff;
+padding:9px 12px;
+background:#1e2235;
+border:1px solid #323a58;
+border-left:3px solid #6aaaff;
+border-radius:0 var(–r2) var(–r2) 0;
+}
+.lesson-bullet::before{
+content:’›’;color:#6aaaff;font-size:16px;font-weight:800;
+flex-shrink:0;margin-top:1px;line-height:1;
+}
+.lesson-intro{
+font-size:var(–fs);line-height:var(–lh);color:#c8d0ee;
+margin-bottom:12px;padding:11px 13px;
+background:rgba(106,170,255,.07);
+border-radius:var(–r2);border-left:3px solid #6aaaff44;
+}
+.key-term{
+color:#f5c842;font-weight:700;
+}
+.key-term.lit{background:#ffe033;color:#0a0a0a;border-radius:2px}
+.key-term.past{color:#b8a030}
+.w.lit{background:#ffe033;color:#0a0a0a;border-radius:2px;padding:0 1px}
+.w.past{color:#7080a0}
 </style>
 
 </head>
@@ -2073,6 +2105,48 @@ function nextSub() {
 }
 
 // ── LESSON RENDER ────────────────────────────────────────────
+// Key terms to highlight in gold across all sections
+var KEY_TERMS = [
+  'excluded','exempt','registration','registered','unregistered',
+  'broker-dealer','investment adviser','agent','IAR','administrator',
+  'fiduciary','suitability','discretionary','custody','churning',
+  'front-running','selling away','scalping','wash sale','pump and dump',
+  'short and distort','matched orders','painting the tape',
+  'coordination','qualification','filing','notification',
+  'antifraud','fraud','misrepresentation','omission','material',
+  'revocation','suspension','denial','cancellation','withdrawal',
+  'felony','misdemeanor','criminal','civil','rescission',
+  'qualified custodian','wrap fee','performance fee','brochure',
+  'federal covered','NSMIA','USA','AUM','SEC','NASAA',
+  'non-institutional','institutional','private placement',
+  'commercial paper','variable annuity','fixed annuity',
+  'cease and desist','summary suspension','subpoena',
+  'willful','dishonest','unethical','insolvent','insolvency',
+  'three-prong','place of business','regular business'
+];
+
+function isKeyTerm(word) {
+  var clean = word.toLowerCase().replace(/[^a-z0-9-]/g, '');
+  for (var i = 0; i < KEY_TERMS.length; i++) {
+    var term = KEY_TERMS[i].toLowerCase();
+    if (clean === term || clean === term + 's' || clean === term + 'ed' || clean === term + 'ing') {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Split a paragraph into bullet-friendly sentences
+function splitToBullets(para) {
+  // Split on '. ' or '; ' but keep the delimiter
+  var bullets = [];
+  // Split on sentence boundaries
+  var raw = para.split(/(?<=[.;])\s+(?=[A-Z0-9])/);
+  // If only one sentence or very short, return as-is
+  if (raw.length <= 1 || para.length < 120) return [para];
+  return raw.filter(function(s) { return s.trim().length > 0; });
+}
+
 function renderSubLesson() {
   var s = DATA[curSec];
   var sb = s.subs[curSub];
@@ -2093,41 +2167,76 @@ function renderSubLesson() {
   var nextBtn = document.getElementById('next-sub-btn');
   if (nextBtn) nextBtn.textContent = (curSub === s.subs.length - 1) ? '→ Flashcards' : 'Next Topic →';
 
-  // Lesson body — pre-tokenize words for audio highlight
   var body = document.getElementById('lesson-body');
   if (!body) return;
   body.innerHTML = '';
+  wordSpans = [];
 
   var box = document.createElement('div');
   box.className = 'lesson-box';
 
+  // Topic heading
   var h = document.createElement('div');
   h.className = 'lesson-h';
   h.textContent = sb.title;
   box.appendChild(h);
 
   var globalW = 0;
-  wordSpans = [];
 
-  sb.paras.forEach(function(para) {
-    var p = document.createElement('p');
-    p.className = 'lesson-p';
-    var tokens = para.split(/(\s+)/);
-    tokens.forEach(function(tok) {
-      if (/^\s+$/.test(tok)) {
-        p.appendChild(document.createTextNode(tok));
-      } else {
-        var span = document.createElement('span');
-        span.className = 'w';
-        span.setAttribute('data-wi', globalW);
-        span.textContent = tok;
-        wordSpans.push(span);
-        p.appendChild(span);
-        globalW++;
-      }
-    });
-    box.appendChild(p);
+  sb.paras.forEach(function(para, paraIdx) {
+    // First paragraph is always a full paragraph (intro)
+    // Subsequent paragraphs get broken into bullets if long enough
+    var bullets = (paraIdx > 0) ? splitToBullets(para) : [para];
+    var isMultiBullet = bullets.length > 1;
+
+    if (isMultiBullet) {
+      // Render as a bullet list
+      var ul = document.createElement('ul');
+      ul.className = 'lesson-bullets';
+      bullets.forEach(function(bullet) {
+        var li = document.createElement('li');
+        li.className = 'lesson-bullet';
+        var tokens = bullet.trim().split(/(\s+)/);
+        tokens.forEach(function(tok) {
+          if (/^\s+$/.test(tok)) {
+            li.appendChild(document.createTextNode(tok));
+          } else {
+            var span = document.createElement('span');
+            var isKey = isKeyTerm(tok);
+            span.className = isKey ? 'w key-term' : 'w';
+            span.setAttribute('data-wi', globalW);
+            span.textContent = tok;
+            wordSpans.push(span);
+            li.appendChild(span);
+            globalW++;
+          }
+        });
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    } else {
+      // Render as a paragraph
+      var p = document.createElement('p');
+      p.className = paraIdx === 0 ? 'lesson-p lesson-intro' : 'lesson-p';
+      var tokens = para.split(/(\s+)/);
+      tokens.forEach(function(tok) {
+        if (/^\s+$/.test(tok)) {
+          p.appendChild(document.createTextNode(tok));
+        } else {
+          var span = document.createElement('span');
+          var isKey = isKeyTerm(tok);
+          span.className = isKey ? 'w key-term' : 'w';
+          span.setAttribute('data-wi', globalW);
+          span.textContent = tok;
+          wordSpans.push(span);
+          p.appendChild(span);
+          globalW++;
+        }
+      });
+      box.appendChild(p);
+    }
   });
+
   body.appendChild(box);
   curWI = -1;
 }
@@ -2240,6 +2349,7 @@ function elPrefetchNext(pi) {
 function initAP() {
   apStop();
   var sb = DATA[curSec].subs[curSub];
+  // Build chunk list for segment display (one per paragraph)
   apChunks = [];
   var wc = 0;
   sb.paras.forEach(function(p, pi) {
@@ -2254,7 +2364,7 @@ function initAP() {
   apUpdateUI();
   var dot = document.getElementById('ap-dot');
   if (dot) dot.className = 'ap-dot';
-  setText('ap-now-txt', 'Press ▶ — ElevenLabs AI voice');
+  setText('ap-now-txt', 'Press ▶ to listen — AI voice');
 }
 
 function buildChunks(sb) {
@@ -2299,82 +2409,122 @@ function apPlay() {
   elPlayChunk(elChunkIdx);
 }
 
-function elPlayChunk(ci) {
-  if (ci >= apChunks.length) { apFinish(); return; }
-  elChunkIdx = ci;
-  var chunk = apChunks[ci];
-  var key = elKey(curSec, curSub, ci);
+// ── AUDIO ENGINE v4 ──────────────────────────────────────────
+// KEY CHANGE: send ALL paragraphs as ONE request to ElevenLabs.
+// One audio file = no chaining bugs, no "ended" race conditions.
+// Word highlight uses character-weighted timing for accuracy.
+// ─────────────────────────────────────────────────────────────
 
-  // Show loading state
+function buildWordTimings(text) {
+  var words = text.split(/\s+/);
+  var weights = words.map(function(w) {
+    var len = w.replace(/[^a-zA-Z0-9]/g, '').length || 1;
+    var punct = /[.,;:!?]$/.test(w) ? 0.4 : 0;
+    return len + punct;
+  });
+  var total = weights.reduce(function(a, b) { return a + b; }, 0);
+  var timings = [];
+  var cum = 0;
+  weights.forEach(function(w) {
+    timings.push(cum / total);
+    cum += w;
+  });
+  return timings;
+}
+
+function elPlayChunk(ci) {
+  // ci is ignored — we always play the full topic as one audio file
+  // kept for API compatibility with skip/jump functions
+  elChunkIdx = 0;
+  updateSegState(0);
+
   var dot = document.getElementById('ap-dot');
   if (dot) dot.className = 'ap-dot on';
-  setText('ap-now-txt', ci === 0 ? 'Generating audio…' : 'Loading…');
-  updateSegState(ci);
+  setText('ap-now-txt', 'Generating audio…');
 
-  elFetch(chunk.text, key).then(function(url) {
-    if (!apPlaying) return; // user stopped while fetching
+  // Build full text from ALL paragraphs joined with natural pauses
+  var sb = DATA[curSec].subs[curSub];
+  var fullText = sb.paras.map(function(p) { return p.trim(); }).join('  ');
+  var cacheKey = 'full_' + elKey(curSec, curSub, 0);
+  var wordTimings = buildWordTimings(fullText);
 
-    // Stop any existing audio
+  elFetch(fullText, cacheKey).then(function(url) {
+    if (!apPlaying) return;
+
+    // Clean up any existing audio
     if (elAudio) {
       elAudio.pause();
+      elAudio.onended = null;
       elAudio.src = '';
+      elAudio = null;
     }
 
-    elAudio = new Audio(url);
-    elAudio.playbackRate = apSpd;
+    var audio = new Audio(url);
+    audio.playbackRate = apSpd;
+    elAudio = audio;
 
-    // Show what's playing
-    setText('ap-now-txt', chunk.text.substring(0, 80) + (chunk.text.length > 80 ? '…' : ''));
+    setText('ap-now-txt', sb.paras[0].substring(0, 80) + '…');
     if (dot) dot.className = 'ap-dot on';
 
-    // Word highlighting — evenly distribute words across duration
-    elAudio.addEventListener('loadedmetadata', function() {
-      var dur = elAudio.duration || 0;
-      if (dur > 0) {
-        // Update total time estimate
-        var wordsPerSec = chunk.text.split(/\s+/).length / dur;
-        apTotal = Math.round(wordSpans.length / wordsPerSec);
-        apUpdateUI();
-      }
-    });
-
-    elAudio.addEventListener('timeupdate', function() {
-      var dur = elAudio.duration || 1;
-      var frac = elAudio.currentTime / dur;
-      var wordCount = chunk.text.split(/\s+/).length;
-      var wordPos = Math.floor(frac * wordCount);
-      var globalIdx = chunk.sw + wordPos;
-      if (globalIdx !== curWI) hlWord(Math.min(globalIdx, wordSpans.length - 1));
-
-      // Update elapsed: sum of previous chunks + current position
-      var prevSecs = 0;
-      for (var i = 0; i < ci; i++) {
-        var prevWords = apChunks[i].text.split(/\s+/).length;
-        prevSecs += prevWords / Math.max(wordsPerSec || 2.5, 0.1);
-      }
-      apElapsed = prevSecs + elAudio.currentTime;
+    audio.addEventListener('loadedmetadata', function() {
+      apTotal = audio.duration || 0;
       apUpdateUI();
     });
 
-    elAudio.addEventListener('ended', function() {
-      if (!apPlaying) return;
-      elChunkIdx++;
-      elPlayChunk(elChunkIdx);
+    audio.addEventListener('timeupdate', function() {
+      var dur = audio.duration || 1;
+      var adjustedTime = Math.max(0, audio.currentTime + 0.1);
+      var frac = Math.min(adjustedTime / dur, 1);
+
+      // Find word index using weighted timings
+      var wordIdx = 0;
+      for (var w = wordTimings.length - 1; w >= 0; w--) {
+        if (frac >= wordTimings[w]) { wordIdx = w; break; }
+      }
+      if (wordIdx !== curWI) {
+        hlWord(Math.min(wordIdx, wordSpans.length - 1));
+      }
+
+      // Update which paragraph segment is active
+      var paraIdx = 0;
+      var wordsSoFar = 0;
+      for (var pi = 0; pi < sb.paras.length; pi++) {
+        var pWords = sb.paras[pi].trim().split(/\s+/).length;
+        if (wordIdx >= wordsSoFar && wordIdx < wordsSoFar + pWords) {
+          paraIdx = pi;
+          break;
+        }
+        wordsSoFar += pWords;
+      }
+      elChunkIdx = paraIdx;
+      updateSegState(paraIdx);
+
+      // Show current paragraph preview
+      var preview = sb.paras[paraIdx];
+      if (preview) {
+        setText('ap-now-txt', preview.substring(0, 80) + (preview.length > 80 ? '…' : ''));
+      }
+
+      apElapsed = audio.currentTime;
+      apUpdateUI();
     });
 
-    elAudio.addEventListener('error', function(e) {
-      showToast('Audio error. Check API key.');
+    audio.addEventListener('ended', function() {
+      if (elAudio !== audio) return;
+      apFinish();
+    });
+
+    audio.addEventListener('error', function() {
+      showToast('Audio error — check ElevenLabs key');
       apStop();
     });
 
-    elAudio.play().catch(function(e) {
+    audio.play().catch(function(e) {
       showToast('Playback blocked: ' + e.message);
       apStop();
     });
 
     startProgressTimer();
-    // Prefetch next paragraph in background
-    elPrefetchNext(ci);
 
   }).catch(function(err) {
     showToast('ElevenLabs error: ' + err.message);
@@ -2382,14 +2532,12 @@ function elPlayChunk(ci) {
   });
 }
 
-var wordsPerSec = 2.5; // fallback, updated from actual audio
-
 function startProgressTimer() {
   clearInterval(apTimer);
   apTimer = setInterval(function() {
     if (!apPlaying || !elAudio) return;
     apUpdateUI();
-  }, 250);
+  }, 200);
 }
 
 function apFinish() {
@@ -2418,7 +2566,12 @@ function apStop() {
   apPlaying = false;
   clearInterval(apTimer);
   clearHl();
-  if (elAudio) { elAudio.pause(); elAudio.src = ''; elAudio = null; }
+  if (elAudio) {
+    elAudio.pause();
+    elAudio.onended = null;
+    elAudio.src = '';
+    elAudio = null;
+  }
   apSetPlayIcon(false);
   var dot = document.getElementById('ap-dot');
   if (dot) dot.className = 'ap-dot';
@@ -2426,47 +2579,36 @@ function apStop() {
 }
 
 function apSkip(sec) {
-  // Skip forward/back within current audio element if possible
-  if (elAudio && !elAudio.ended && elAudio.duration) {
-    var newTime = Math.max(0, Math.min(elAudio.currentTime + sec, elAudio.duration));
-    elAudio.currentTime = newTime;
+  if (elAudio && elAudio.duration) {
+    elAudio.currentTime = Math.max(0, Math.min(elAudio.currentTime + sec, elAudio.duration));
     apUpdateUI();
-    return;
-  }
-  // Otherwise jump chunks
-  if (sec > 0 && elChunkIdx < apChunks.length - 1) {
-    var was = apPlaying;
-    apPause();
-    elChunkIdx = Math.min(elChunkIdx + 1, apChunks.length - 1);
-    if (was) { apPlaying = true; apSetPlayIcon(true); elPlayChunk(elChunkIdx); }
-  } else if (sec < 0 && elChunkIdx > 0) {
-    var was2 = apPlaying;
-    apPause();
-    elChunkIdx = Math.max(elChunkIdx - 1, 0);
-    if (was2) { apPlaying = true; apSetPlayIcon(true); elPlayChunk(elChunkIdx); }
   }
 }
 
 function apJump(pi) {
-  var was = apPlaying;
-  apPause();
-  if (elAudio) { elAudio.src = ''; elAudio = null; }
-  elChunkIdx = pi;
-  apElapsed = 0;
+  // Jump to the start of paragraph pi
+  if (!elAudio || !elAudio.duration) return;
+  var sb = DATA[curSec].subs[curSub];
+  var totalWords = 0;
+  sb.paras.forEach(function(p) { totalWords += p.trim().split(/\s+/).length; });
+  var wordsBefore = 0;
+  for (var i = 0; i < pi; i++) {
+    wordsBefore += sb.paras[i].trim().split(/\s+/).length;
+  }
+  var frac = totalWords > 0 ? wordsBefore / totalWords : 0;
+  elAudio.currentTime = frac * elAudio.duration;
   apUpdateUI();
-  if (was) { apPlaying = true; apSetPlayIcon(true); elPlayChunk(pi); }
+  if (!apPlaying) { apPlaying = true; apSetPlayIcon(true); elAudio.play(); }
 }
 
 function apCycleSpeed() {
   apSpdIdx = (apSpdIdx + 1) % apSpeeds.length;
   apSpd = apSpeeds[apSpdIdx];
   var btn = document.getElementById('ap-spd-btn');
-  if (btn) btn.textContent = apSpd + '×';
-  // Apply immediately to current audio — no re-fetch needed
+  if (btn) btn.textContent = apSpd + 'x';
   if (elAudio) elAudio.playbackRate = apSpd;
 }
 
-// Scrubber — scrubs within current audio element
 function apSetupScrubber() {
   var track = document.getElementById('ap-track');
   if (!track) return;
@@ -2498,7 +2640,7 @@ function apScrubAt(clientX, track) {
   if (elAudio && elAudio.duration) {
     elAudio.currentTime = ratio * elAudio.duration;
   }
-  apElapsed = ratio * apTotal;
+  apElapsed = ratio * (apTotal || 0);
   apUpdateUI();
 }
 
@@ -2515,20 +2657,20 @@ function updateSegState(activePi) {
 function apUpdateUI() {
   var track = document.getElementById('ap-track');
   if (!track) return;
-  var pct = apTotal > 0 ? Math.min(apElapsed / apTotal, 1) : 0;
+  var total = apTotal || (elAudio && elAudio.duration) || 0;
+  var elapsed = apElapsed || (elAudio ? elAudio.currentTime : 0);
+  var pct = total > 0 ? Math.min(elapsed / total, 1) : 0;
   var w = track.getBoundingClientRect().width;
   var px = Math.round(pct * w);
   var fill = document.getElementById('ap-fill');
   var thumb = document.getElementById('ap-thumb');
   if (fill) fill.style.width = px + 'px';
   if (thumb) thumb.style.left = px + 'px';
-
   function fmt(s) {
     var m = Math.floor(s / 60), sc = Math.floor(s % 60);
     return m + ':' + (sc < 10 ? '0' : '') + sc;
   }
-  setText('ap-time', fmt(Math.min(apElapsed, apTotal)) + ' / ' + fmt(apTotal || 0));
-  updateSegState(elChunkIdx);
+  setText('ap-time', fmt(Math.min(elapsed, total)) + ' / ' + fmt(total));
 }
 
 function apSetPlayIcon(playing) {
@@ -2546,7 +2688,7 @@ function apSetPlayIcon(playing) {
 
 function hlWord(idx) {
   if (curWI >= 0 && curWI < wordSpans.length) wordSpans[curWI].className = 'w past';
-  for (var i = Math.max(0, idx - 4); i < idx; i++) {
+  for (var i = Math.max(0, idx - 3); i < idx; i++) {
     if (wordSpans[i]) wordSpans[i].className = 'w past';
   }
   curWI = idx;
@@ -2565,7 +2707,7 @@ function clearHl() {
   curWI = -1;
 }
 
-// Stub — no longer needed with ElevenLabs
+// Stub
 function loadVoices() { elInit(); }
 
 // ── FLASHCARDS ───────────────────────────────────────────────
