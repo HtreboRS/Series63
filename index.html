@@ -2201,7 +2201,7 @@ function renderSubLesson() {
 // - Speed control via Audio.playbackRate (no re-generation needed)
 // ─────────────────────────────────────────────────────────────
 
-var EL_KEY    = 'sk_e7ad0cf1a258f729bbc592fad310aa6b0d6a6fbf32219e65';
+var EL_KEY    = 'sk_20faaac65f86a5cd4d3103890073293006d489435fd12850';
 var EL_VOICE  = 'pNInz6obpgDQGcFmaJgB'; // Adam — deep, clear, authoritative
 var EL_MODEL  = 'eleven_turbo_v2';       // fastest, lowest latency
 
@@ -2298,47 +2298,34 @@ function elFetch(text, cacheKey) {
   if (elPrefetch[cacheKey]) {
     return elPrefetch[cacheKey];
   }
-  var promise = fetch('https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE + '/with-timestamps', {
-    method: 'POST',
-    headers: {
-      'xi-api-key': EL_KEY,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      text: text,
-      model_id: EL_MODEL,
-      voice_settings: {stability: 0.5, similarity_boost: 0.75, style: 0.0, use_speaker_boost: true}
-    })
-  }).then(function(res) {
-    if (!res.ok) { throw new Error('ElevenLabs API error ' + res.status); }
-    return res.json();
-  }).then(function(json) {
-    // Decode base64 audio to blob
-    var b64 = json.audio_base64;
-    var binary = atob(b64);
-    var bytes = new Uint8Array(binary.length);
-    for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
-    var blob = new Blob([bytes], {type: 'audio/mpeg'});
+
+  var body = JSON.stringify({
+    text: text,
+    model_id: EL_MODEL,
+    voice_settings: {stability:0.5, similarity_boost:0.75, style:0.0, use_speaker_boost:true}
+  });
+  var headers = {'xi-api-key': EL_KEY, 'Content-Type': 'application/json'};
+
+  // Always use the standard endpoint — reliable on all plans
+  // with-timestamps requires paid plan and often fails silently
+  var promise = fetch(
+    'https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE,
+    {method:'POST', headers: {'xi-api-key':EL_KEY, 'Content-Type':'application/json', 'Accept':'audio/mpeg'}, body: body}
+  ).then(function(res) {
+    if (!res.ok) { throw new Error('ElevenLabs ' + res.status); }
+    return res.blob();
+  }).then(function(blob) {
     var url = URL.createObjectURL(blob);
-
-    // Extract word-level timestamps from alignment data
-    var wordTimes = [];
-    if (json.alignment && json.alignment.characters) {
-      wordTimes = charAlignToWordTimes(
-        json.alignment.characters,
-        json.alignment.character_start_times_seconds,
-        text
-      );
-    }
-
-    var result = {url: url, wordTimes: wordTimes};
+    var result = {url: url, wordTimes: []};
     elCache[cacheKey] = result;
     delete elPrefetch[cacheKey];
     return result;
   });
+
   elPrefetch[cacheKey] = promise;
   return promise;
 }
+
 
 function elPlayChunk(ci) {
   elChunkIdx = 0;
@@ -2380,11 +2367,11 @@ function elPlayChunk(ci) {
     audio.addEventListener('timeupdate', function() {
       var t = audio.currentTime;
       apElapsed = t;
+      var dur = audio.duration || 1;
 
-      // Find the current word using exact timestamps
       var wordIdx = 0;
-      if (wordTimes.length > 0) {
-        // Binary search for current word
+      if (wordTimes && wordTimes.length > 0) {
+        // Exact timestamps from API — binary search
         var lo = 0, hi = wordTimes.length - 1;
         while (lo < hi) {
           var mid = Math.floor((lo + hi + 1) / 2);
@@ -2392,6 +2379,21 @@ function elPlayChunk(ci) {
           else hi = mid - 1;
         }
         wordIdx = lo;
+      } else {
+        // Fallback: character-weighted estimation
+        var frac = Math.min(t / dur, 1);
+        var allWords = wordSpans.map(function(s) { return s.textContent; });
+        var weights = allWords.map(function(w) {
+          var len = w.replace(/[^a-zA-Z0-9]/g,'').length || 1;
+          return len + (/[.,;:!?]$/.test(w) ? 0.4 : 0);
+        });
+        var total = weights.reduce(function(a,b){return a+b;},0);
+        var target = frac * total;
+        var cum = 0;
+        for (var wi = 0; wi < weights.length; wi++) {
+          cum += weights[wi];
+          if (cum >= target) { wordIdx = wi; break; }
+        }
       }
 
       if (wordIdx !== curWI) {
