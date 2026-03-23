@@ -2252,6 +2252,45 @@ function elKey(si, subi, pi) {
 }
 
 // Fetch one paragraph from ElevenLabs, return blob URL promise
+// ── ELEVENLABS WITH-TIMESTAMPS API ──────────────────────────
+// Uses /with-timestamps endpoint to get exact word-level timing.
+// Returns both the audio blob URL AND an array of word timestamps.
+// Cache stores: { url, wordTimes }
+// wordTimes[i] = seconds when word i starts speaking
+// ─────────────────────────────────────────────────────────────
+
+// Convert ElevenLabs character alignment to word start times
+function charAlignToWordTimes(charArray, charStartTimes, text) {
+  var wordTimes = [];
+  var words = text.split(/\s+/);
+  var charIdx = 0;
+  var textPos = 0;
+  words.forEach(function(word) {
+    // Find where this word starts in the text
+    var found = text.indexOf(word, textPos);
+    if (found === -1) { wordTimes.push(0); return; }
+    textPos = found;
+    // Map text position to character array index
+    // ElevenLabs charArray aligns with the text characters
+    var startTime = 0;
+    if (charIdx < charStartTimes.length) {
+      // Walk to the right char index
+      var charsScanned = 0;
+      for (var ci = 0; ci < charArray.length; ci++) {
+        if (charsScanned >= found) {
+          startTime = charStartTimes[ci] || 0;
+          break;
+        }
+        charsScanned++;
+      }
+    }
+    wordTimes.push(startTime);
+    charIdx += word.length;
+    textPos += word.length;
+  });
+  return wordTimes;
+}
+
 function elFetch(text, cacheKey) {
   if (elCache[cacheKey]) {
     return Promise.resolve(elCache[cacheKey]);
@@ -2259,12 +2298,11 @@ function elFetch(text, cacheKey) {
   if (elPrefetch[cacheKey]) {
     return elPrefetch[cacheKey];
   }
-  var promise = fetch('https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE, {
+  var promise = fetch('https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE + '/with-timestamps', {
     method: 'POST',
     headers: {
       'xi-api-key': EL_KEY,
-      'Content-Type': 'application/json',
-      'Accept': 'audio/mpeg'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       text: text,
@@ -2272,28 +2310,138 @@ function elFetch(text, cacheKey) {
       voice_settings: {stability: 0.5, similarity_boost: 0.75, style: 0.0, use_speaker_boost: true}
     })
   }).then(function(res) {
-    if (!res.ok) { throw new Error('ElevenLabs API error: ' + res.status); }
-    return res.blob();
-  }).then(function(blob) {
+    if (!res.ok) { throw new Error('ElevenLabs API error ' + res.status); }
+    return res.json();
+  }).then(function(json) {
+    // Decode base64 audio to blob
+    var b64 = json.audio_base64;
+    var binary = atob(b64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
+    var blob = new Blob([bytes], {type: 'audio/mpeg'});
     var url = URL.createObjectURL(blob);
-    elCache[cacheKey] = url;
+
+    // Extract word-level timestamps from alignment data
+    var wordTimes = [];
+    if (json.alignment && json.alignment.characters) {
+      wordTimes = charAlignToWordTimes(
+        json.alignment.characters,
+        json.alignment.character_start_times_seconds,
+        text
+      );
+    }
+
+    var result = {url: url, wordTimes: wordTimes};
+    elCache[cacheKey] = result;
     delete elPrefetch[cacheKey];
-    return url;
+    return result;
   });
   elPrefetch[cacheKey] = promise;
   return promise;
 }
 
-// Prefetch next paragraph silently in background
-function elPrefetchNext(pi) {
-  if (curSec < 0) return;
+function elPlayChunk(ci) {
+  elChunkIdx = 0;
+  updateSegState(0);
+
+  var dot = document.getElementById('ap-dot');
+  if (dot) dot.className = 'ap-dot on';
+  setText('ap-now-txt', 'Generating audio…');
+
   var sb = DATA[curSec].subs[curSub];
-  var nextPi = pi + 1;
-  if (nextPi >= sb.paras.length) return;
-  var key = elKey(curSec, curSub, nextPi);
-  if (elCache[key] || elPrefetch[key]) return;
-  elFetch(sb.paras[nextPi].trim(), key); // fire and forget
+  var fullText = sb.paras.map(function(p) { return p.trim(); }).join('  ');
+  var cacheKey = 'full_' + elKey(curSec, curSub, 0);
+
+  elFetch(fullText, cacheKey).then(function(result) {
+    if (!apPlaying) return;
+
+    var url = result.url;
+    var wordTimes = result.wordTimes;  // exact seconds per word
+
+    if (elAudio) {
+      elAudio.pause();
+      elAudio.onended = null;
+      elAudio.src = '';
+      elAudio = null;
+    }
+
+    var audio = new Audio(url);
+    audio.playbackRate = apSpd;
+    elAudio = audio;
+
+    setText('ap-now-txt', sb.paras[0].substring(0, 80) + '…');
+    if (dot) dot.className = 'ap-dot on';
+
+    audio.addEventListener('loadedmetadata', function() {
+      apTotal = audio.duration || 0;
+      apUpdateUI();
+    });
+
+    audio.addEventListener('timeupdate', function() {
+      var t = audio.currentTime;
+      apElapsed = t;
+
+      // Find the current word using exact timestamps
+      var wordIdx = 0;
+      if (wordTimes.length > 0) {
+        // Binary search for current word
+        var lo = 0, hi = wordTimes.length - 1;
+        while (lo < hi) {
+          var mid = Math.floor((lo + hi + 1) / 2);
+          if (wordTimes[mid] <= t) lo = mid;
+          else hi = mid - 1;
+        }
+        wordIdx = lo;
+      }
+
+      if (wordIdx !== curWI) {
+        hlWord(Math.min(wordIdx, wordSpans.length - 1));
+      }
+
+      // Track which paragraph we're in
+      var wordsSoFar = 0;
+      var paraIdx = 0;
+      for (var pi = 0; pi < sb.paras.length; pi++) {
+        var pWords = sb.paras[pi].trim().split(/\s+/).length;
+        if (wordIdx >= wordsSoFar && wordIdx < wordsSoFar + pWords) {
+          paraIdx = pi;
+          break;
+        }
+        wordsSoFar += pWords;
+      }
+      if (paraIdx !== elChunkIdx) {
+        elChunkIdx = paraIdx;
+        updateSegState(paraIdx);
+        var preview = sb.paras[paraIdx] || '';
+        setText('ap-now-txt', preview.substring(0, 80) + (preview.length > 80 ? '…' : ''));
+      }
+
+      apUpdateUI();
+    });
+
+    audio.addEventListener('ended', function() {
+      if (elAudio !== audio) return;
+      apFinish();
+    });
+
+    audio.addEventListener('error', function() {
+      showToast('Audio error — check ElevenLabs key');
+      apStop();
+    });
+
+    audio.play().catch(function(e) {
+      showToast('Playback blocked: ' + e.message);
+      apStop();
+    });
+
+    startProgressTimer();
+
+  }).catch(function(err) {
+    showToast('ElevenLabs: ' + err.message);
+    apStop();
+  });
 }
+
 
 // ── initAP ───────────────────────────────────────────────────
 function initAP() {
