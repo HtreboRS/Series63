@@ -1285,13 +1285,152 @@ function saveG(key) {
 // User ID is auto-generated once and stored permanently.
 // ─────────────────────────────────────────────────────────────
 
+var SB_URL = 'https://sadeduexxatwxialfudh.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNhZGVkdWV4YXR3eGlhbGZmdWRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwMDU5MzIsImV4cCI6MjA4OTU4MTkzMn0._zUuwQYGVtBTJjpu20murWSYEzaI-hlCRKT4BCvBelM';
+var SB_TABLE = 's63_sync';
 
-// Removed Supabase sync code
-function schedulSync() {
-  // No-op: Supabase sync removed
+// Get or create a permanent user ID
+function getSyncUserId() {
+  var uid = localStorage.getItem('s63_uid');
+  if (!uid) {
+    uid = 'sam_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    localStorage.setItem('s63_uid', uid);
+  }
+  return uid;
 }
+
+// Collect ALL state into one JSON object
+function collectAllState() {
+  var uid = getSyncUserId();
+  // Collect question-level stats
+  var qstats = {};
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf('s63q_') === 0) {
+        qstats[k] = lsGet(k);
+      }
+    }
+  } catch(e) {}
+
+  return {
+    uid: uid,
+    xp: G.xp,
+    coins: G.coins,
+    scores: G.scores,
+    streak: G.streak,
+    examDate: G.examDate,
+    weak: G.weak,
+    srs: G.srs,
+    unlocked: G.unlocked,
+    hotStreak: G.hotStreak,
+    challenges: G.challenges,
+    a11y: G.a11y,
+    totalAns: G.totalAns,
+    totalCor: G.totalCor,
+    qstats: qstats,
+    lastSaved: new Date().toISOString(),
+    version: 2
+  };
+}
+
+// Push state to Supabase (upsert)
+function syncToCloud(silent) {
+  var uid = getSyncUserId();
+  var payload = collectAllState();
+  fetch(SB_URL + '/rest/v1/' + SB_TABLE, {
+    method: 'POST',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify({
+      user_id: uid,
+      data: payload,
+      updated_at: new Date().toISOString()
+    })
+  }).then(function(res) {
+    if (res.ok) {
+      if (!silent) showToast('☁️ Saved to cloud');
+      updateSyncIndicator(true);
+    } else {
+      res.text().then(function(t) {
+        console.error('Supabase sync error:', t);
+        updateSyncIndicator(false);
+      });
+    }
+  }).catch(function(err) {
+    console.error('Supabase sync failed:', err.message);
+    updateSyncIndicator(false);
+  });
+}
+
+// Pull state from Supabase and restore
+function syncFromCloud(onDone) {
+  var uid = getSyncUserId();
+  fetch(SB_URL + '/rest/v1/' + SB_TABLE + '?user_id=eq.' + encodeURIComponent(uid) + '&limit=1', {
+    method: 'GET',
+    headers: {
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json'
+    }
+  }).then(function(res) { return res.json(); })
+  .then(function(rows) {
+    if (!rows || !rows.length || !rows[0].data) {
+      if (onDone) onDone(false);
+      return;
+    }
+    var d = rows[0].data;
+    // Restore G state
+    if (d.xp !== undefined)         { G.xp = d.xp; lsSet('s63v2_xp', G.xp); }
+    if (d.coins !== undefined)       { G.coins = d.coins; lsSet('s63v2_coins', G.coins); }
+    if (d.scores !== undefined)      { G.scores = d.scores; lsSet('s63v2_scores', G.scores); }
+    if (d.streak !== undefined)      { G.streak = d.streak; lsSet('s63v2_streak', G.streak); }
+    if (d.examDate !== undefined)    { G.examDate = d.examDate; lsSet('s63v2_exam', G.examDate); }
+    if (d.weak !== undefined)        { G.weak = d.weak; lsSet('s63v2_weak', G.weak); }
+    if (d.srs !== undefined)         { G.srs = d.srs; lsSet('s63v2_srs', G.srs); }
+    if (d.unlocked !== undefined)    { G.unlocked = d.unlocked; lsSet('s63v2_cases', G.unlocked); }
+    if (d.hotStreak !== undefined)   { G.hotStreak = d.hotStreak; lsSet('s63v2_hot', G.hotStreak); }
+    if (d.challenges !== undefined)  { G.challenges = d.challenges; lsSet('s63v2_ch', G.challenges); }
+    if (d.a11y !== undefined)        { G.a11y = d.a11y; lsSet('s63v2_a11y', G.a11y); }
+    if (d.totalAns !== undefined)    { G.totalAns = d.totalAns; lsSet('s63v2_tans', G.totalAns); }
+    if (d.totalCor !== undefined)    { G.totalCor = d.totalCor; lsSet('s63v2_tcor', G.totalCor); }
+    // Restore question-level stats
+    if (d.qstats) {
+      Object.keys(d.qstats).forEach(function(k) {
+        lsSet(k, d.qstats[k]);
+      });
+    }
+    updateSyncIndicator(true);
+    if (onDone) onDone(true);
+  })
+  .catch(function(err) {
+    console.error('Supabase load failed:', err.message);
+    if (onDone) onDone(false);
+  });
+}
+
+// Debounced auto-sync — fires 2s after last save
+var syncTimer = null;
+function schedulSync() {
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(function() { syncToCloud(true); }, 2000);
+}
+
+// Update the cloud sync indicator dot in the topbar
 function updateSyncIndicator(ok) {
-  // No-op: Supabase sync removed
+  var el = document.getElementById('sync-dot');
+  if (el) {
+    el.title = ok ? 'Synced to cloud — tap to force sync' : 'Sync failed — saved locally';
+    el.style.background = ok ? 'var(--gn)' : 'var(--rd)';
+  }
+  var el2 = document.getElementById('sync-dot-drawer');
+  if (el2) el2.style.background = ok ? 'var(--gn)' : 'var(--rd)';
+  var txt = document.getElementById('sync-status-txt');
+  if (txt) txt.textContent = ok ? 'Synced to cloud ✓' : 'Sync failed — offline?';
 }
 
 
@@ -2063,7 +2202,7 @@ function renderSubLesson() {
 // ─────────────────────────────────────────────────────────────
 
 var EL_KEY    = '65a73499ae6827e702bd11bcabca6b1a50e40ec85fbfea6623a94847d2be7788';
-var EL_VOICE  = 'pNInz6obpgDQGcFmaJgB'; // Adam — deep, clear, authoritative
+var EL_VOICE  = '6fZce9LFNG3iEITDfqZZ'; // Adam — deep, clear, authoritative
 var EL_MODEL  = 'eleven_turbo_v2';       // fastest, lowest latency
 
 // Voice menu options shown in drawer
@@ -2159,34 +2298,47 @@ function elFetch(text, cacheKey) {
   if (elPrefetch[cacheKey]) {
     return elPrefetch[cacheKey];
   }
-
-  var body = JSON.stringify({
-    text: text,
-    model_id: EL_MODEL,
-    voice_settings: {stability:0.5, similarity_boost:0.75, style:0.0, use_speaker_boost:true}
-  });
-  var headers = {'xi-api-key': EL_KEY, 'Content-Type': 'application/json'};
-
-  // Always use the standard endpoint — reliable on all plans
-  // with-timestamps requires paid plan and often fails silently
-  var promise = fetch(
-    'https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE,
-    {method:'POST', headers: {'xi-api-key':EL_KEY, 'Content-Type':'application/json', 'Accept':'audio/mpeg'}, body: body}
-  ).then(function(res) {
-    if (!res.ok) { throw new Error('ElevenLabs ' + res.status); }
-    return res.blob();
-  }).then(function(blob) {
+  var promise = fetch('https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE + '/with-timestamps', {
+    method: 'POST',
+    headers: {
+      'xi-api-key': EL_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      text: text,
+      model_id: EL_MODEL,
+      voice_settings: {stability: 0.5, similarity_boost: 0.75, style: 0.0, use_speaker_boost: true}
+    })
+  }).then(function(res) {
+    if (!res.ok) { throw new Error('ElevenLabs API error ' + res.status); }
+    return res.json();
+  }).then(function(json) {
+    // Decode base64 audio to blob
+    var b64 = json.audio_base64;
+    var binary = atob(b64);
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) { bytes[i] = binary.charCodeAt(i); }
+    var blob = new Blob([bytes], {type: 'audio/mpeg'});
     var url = URL.createObjectURL(blob);
-    var result = {url: url, wordTimes: []};
+
+    // Extract word-level timestamps from alignment data
+    var wordTimes = [];
+    if (json.alignment && json.alignment.characters) {
+      wordTimes = charAlignToWordTimes(
+        json.alignment.characters,
+        json.alignment.character_start_times_seconds,
+        text
+      );
+    }
+
+    var result = {url: url, wordTimes: wordTimes};
     elCache[cacheKey] = result;
     delete elPrefetch[cacheKey];
     return result;
   });
-
   elPrefetch[cacheKey] = promise;
   return promise;
 }
-
 
 function elPlayChunk(ci) {
   elChunkIdx = 0;
@@ -2228,11 +2380,11 @@ function elPlayChunk(ci) {
     audio.addEventListener('timeupdate', function() {
       var t = audio.currentTime;
       apElapsed = t;
-      var dur = audio.duration || 1;
 
+      // Find the current word using exact timestamps
       var wordIdx = 0;
-      if (wordTimes && wordTimes.length > 0) {
-        // Exact timestamps from API — binary search
+      if (wordTimes.length > 0) {
+        // Binary search for current word
         var lo = 0, hi = wordTimes.length - 1;
         while (lo < hi) {
           var mid = Math.floor((lo + hi + 1) / 2);
@@ -2240,21 +2392,6 @@ function elPlayChunk(ci) {
           else hi = mid - 1;
         }
         wordIdx = lo;
-      } else {
-        // Fallback: character-weighted estimation
-        var frac = Math.min(t / dur, 1);
-        var allWords = wordSpans.map(function(s) { return s.textContent; });
-        var weights = allWords.map(function(w) {
-          var len = w.replace(/[^a-zA-Z0-9]/g,'').length || 1;
-          return len + (/[.,;:!?]$/.test(w) ? 0.4 : 0);
-        });
-        var total = weights.reduce(function(a,b){return a+b;},0);
-        var target = frac * total;
-        var cum = 0;
-        for (var wi = 0; wi < weights.length; wi++) {
-          cum += weights[wi];
-          if (cum >= target) { wordIdx = wi; break; }
-        }
       }
 
       if (wordIdx !== curWI) {
