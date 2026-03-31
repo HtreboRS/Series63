@@ -2272,8 +2272,11 @@ function elPlayChunk(ci) {
     elAudio.addEventListener('timeupdate', function() {
       var dur = elAudio.duration || 1;
       var frac = elAudio.currentTime / dur;
-      // Only update highlight when word index changes — skip if same
-      var wordPos = Math.floor(frac * chunkWC);
+      // Shift highlight ahead by ~0.35s to match perceived speech
+      var lookahead = 0.35;
+      var adjTime = Math.min(elAudio.currentTime + lookahead, dur);
+      var adjFrac = adjTime / dur;
+      var wordPos = Math.floor(adjFrac * chunkWC);
       var globalIdx = Math.min(chunk.sw + wordPos, wordSpans.length - 1);
       if (globalIdx !== curWI) hlWord(globalIdx);
       apElapsed = chunkPrevSecs + elAudio.currentTime;
