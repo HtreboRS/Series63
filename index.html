@@ -2121,15 +2121,15 @@ function renderSubLesson() {
 
 // ── ELEVENLABS AUDIO ENGINE ──────────────────────────────────
 var EL_KEY   = 'sk_13c619b96fc10ecdcd8e9cf90ff374414e4fb9bcade84927';
-var EL_VOICE = 'pNInz6obpgDQGcFmaJgB';
+var EL_VOICE = 'EXAVITQu4vr4xnSDxMaL';
 var EL_MODEL = 'eleven_turbo_v2';
 var EL_VOICES = [
-  {id:'pNInz6obpgDQGcFmaJgB', name:'Adam (recommended)'},
-  {id:'ErXwobaYiN019PkySvjV', name:'Antoni'},
-  {id:'VR6AewLTigWG4xSOukaG', name:'Arnold'},
-  {id:'21m00Tcm4TlvDq8ikWAM', name:'Rachel'},
-  {id:'AZnzlk1XvdvUeBnXmlld', name:'Domi'},
-  {id:'MF3mGyEYCl7XYWbV9V6O', name:'Elli'}
+  {id:'EXAVITQu4vr4xnSDxMaL', name:'Sarah (default — soft, warm)'},
+  {id:'21m00Tcm4TlvDq8ikWAM', name:'Rachel (calm, clear)'},
+  {id:'AZnzlk1XvdvUeBnXmlld', name:'Domi (confident)'},
+  {id:'MF3mGyEYCl7XYWbV9V6O', name:'Elli (bright)'},
+  {id:'pNInz6obpgDQGcFmaJgB', name:'Adam (deep male)'},
+  {id:'ErXwobaYiN019PkySvjV', name:'Antoni (male)'}
 ];
 var elCache = {}, elAudio = null, elChunkIdx = 0, elPrefetch = {};
 
@@ -2263,20 +2263,20 @@ function elPlayChunk(ci) {
         apUpdateUI();
       }
     });
-    elAudio.addEventListener('timeupdate', function() {
+    // Pre-calculate once — avoid per-frame loop (iOS lag fix)
+    var chunkPrevSecs = 0;
+    for (var pi2 = 0; pi2 < ci; pi2++) {
+      chunkPrevSecs += apChunks[pi2].text.split(/\s+/).length / Math.max(wordsPerSec, 0.1);
+    }
+    var chunkWC = chunk.text.split(/\s+/).length;
+    addEventListener('timeupdate', function() {
       var dur = elAudio.duration || 1;
       var frac = elAudio.currentTime / dur;
-      var wordCount = chunk.text.split(/\s+/).length;
-      var wordPos = Math.floor(frac * wordCount);
-      var globalIdx = chunk.sw + wordPos;
-      if (globalIdx !== curWI) hlWord(Math.min(globalIdx, wordSpans.length - 1));
-      var prevSecs = 0;
-      for (var i = 0; i < ci; i++) {
-        var prevWords = apChunks[i].text.split(/\s+/).length;
-        prevSecs += prevWords / Math.max(wordsPerSec, 0.1);
-      }
-      apElapsed = prevSecs + elAudio.currentTime;
-      apUpdateUI();
+      // Only update highlight when word index changes — skip if same
+      var wordPos = Math.floor(frac * chunkWC);
+      var globalIdx = Math.min(chunk.sw + wordPos, wordSpans.length - 1);
+      if (globalIdx !== curWI) hlWord(globalIdx);
+      apElapsed = chunkPrevSecs + elAudio.currentTime;
     });
     elAudio.addEventListener('ended', function() {
       if (!apPlaying) return;
@@ -2301,7 +2301,7 @@ function elPlayChunk(ci) {
 
 function startProgressTimer() {
   clearInterval(apTimer);
-  apTimer = setInterval(function() { if (apPlaying && elAudio) apUpdateUI(); }, 250);
+  apTimer = setInterval(function() { if (apPlaying && elAudio) apUpdateUI(); }, 400);
 }
 
 function apFinish() {
@@ -2438,16 +2438,30 @@ function apSetPlayIcon(playing) {
   }
 }
 
+// rAF handle to prevent double-scheduling highlight updates
+var hlRaf = null;
 function hlWord(idx) {
-  if (curWI >= 0 && curWI < wordSpans.length) wordSpans[curWI].className = 'w past';
-  for (var i = Math.max(0, idx - 4); i < idx; i++) { if (wordSpans[i]) wordSpans[i].className = 'w past'; }
-  curWI = idx;
-  if (idx >= 0 && idx < wordSpans.length) {
-    var el = wordSpans[idx];
-    el.className = 'w lit';
-    var r = el.getBoundingClientRect();
-    if (r.top < 100 || r.bottom > window.innerHeight - 60) el.scrollIntoView({behavior:'smooth', block:'center'});
+  if (idx === curWI) return; // no change — skip entirely
+  // Unlit previous word immediately (cheap)
+  if (curWI >= 0 && curWI < wordSpans.length) {
+    wordSpans[curWI].className = 'w past';
   }
+  curWI = idx;
+  if (idx < 0 || idx >= wordSpans.length) return;
+  // Batch the DOM write via rAF — prevents layout thrash on iOS
+  if (hlRaf) return; // already scheduled
+  hlRaf = requestAnimationFrame(function() {
+    hlRaf = null;
+    if (curWI < 0 || curWI >= wordSpans.length) return;
+    var el = wordSpans[curWI];
+    el.className = 'w lit';
+    // Scroll only when word is off-screen — use instant scroll (no smooth)
+    var r = el.getBoundingClientRect();
+    var margin = 80;
+    if (r.top < margin || r.bottom > window.innerHeight - margin) {
+      el.scrollIntoView({block:'center'});
+    }
+  });
 }
 
 function clearHl() { wordSpans.forEach(function(w) { w.className = 'w'; }); curWI = -1; }
