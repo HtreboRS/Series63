@@ -2121,15 +2121,15 @@ function renderSubLesson() {
 
 // ── ELEVENLABS AUDIO ENGINE ──────────────────────────────────
 var EL_KEY   = 'sk_13c619b96fc10ecdcd8e9cf90ff374414e4fb9bcade84927';
-var EL_VOICE = '6fZce9LFNG3iEITDfqZZ';
+var EL_VOICE = 'gJx1vCzNCD1EQHT212Ls';
 var EL_MODEL = 'eleven_turbo_v2';
 var EL_VOICES = [
-  {id:'EXAVITQu4vr4xnSDxMaL', name:'Sarah (default — soft, warm)'},
+  {id:'gJx1vCzNCD1EQHT212Ls', name:'Ava (default)'},
+  {id:'EXAVITQu4vr4xnSDxMaL', name:'Sarah (soft, warm)'},
   {id:'21m00Tcm4TlvDq8ikWAM', name:'Rachel (calm, clear)'},
   {id:'AZnzlk1XvdvUeBnXmlld', name:'Domi (confident)'},
   {id:'MF3mGyEYCl7XYWbV9V6O', name:'Elli (bright)'},
-  {id:'pNInz6obpgDQGcFmaJgB', name:'Adam (deep male)'},
-  {id:'ErXwobaYiN019PkySvjV', name:'Antoni (male)'}
+  {id:'pNInz6obpgDQGcFmaJgB', name:'Adam (deep male)'}
 ];
 var elCache = {}, elAudio = null, elChunkIdx = 0, elPrefetch = {};
 
@@ -2269,7 +2269,7 @@ function elPlayChunk(ci) {
       chunkPrevSecs += apChunks[pi2].text.split(/\s+/).length / Math.max(wordsPerSec, 0.1);
     }
     var chunkWC = chunk.text.split(/\s+/).length;
-    addEventListener('timeupdate', function() {
+    elAudio.addEventListener('timeupdate', function() {
       var dur = elAudio.duration || 1;
       var frac = elAudio.currentTime / dur;
       // Only update highlight when word index changes — skip if same
@@ -2328,6 +2328,8 @@ function apPause() {
 function apStop() {
   apPlaying = false;
   clearInterval(apTimer);
+  if (hlRaf) { cancelAnimationFrame(hlRaf); hlRaf = null; }
+  hlPending = -1;
   clearHl();
   if (elAudio) { elAudio.pause(); elAudio.src = ''; elAudio = null; }
   apSetPlayIcon(false);
@@ -2438,27 +2440,27 @@ function apSetPlayIcon(playing) {
   }
 }
 
-// rAF handle to prevent double-scheduling highlight updates
+// Word highlight — rAF batches DOM writes to prevent iOS layout thrash
 var hlRaf = null;
+var hlPending = -1; // tracks the most recent requested index
 function hlWord(idx) {
-  if (idx === curWI) return; // no change — skip entirely
-  // Unlit previous word immediately (cheap)
+  if (idx === curWI) return;
+  // Mark previous word past immediately (cheap className write)
   if (curWI >= 0 && curWI < wordSpans.length) {
     wordSpans[curWI].className = 'w past';
   }
   curWI = idx;
+  hlPending = idx; // always store latest even if rAF already queued
   if (idx < 0 || idx >= wordSpans.length) return;
-  // Batch the DOM write via rAF — prevents layout thrash on iOS
-  if (hlRaf) return; // already scheduled
+  if (hlRaf) return; // rAF already queued — it will pick up hlPending
   hlRaf = requestAnimationFrame(function() {
     hlRaf = null;
-    if (curWI < 0 || curWI >= wordSpans.length) return;
-    var el = wordSpans[curWI];
-    el.className = 'w lit';
-    // Scroll only when word is off-screen — use instant scroll (no smooth)
+    var target = hlPending;
+    if (target < 0 || target >= wordSpans.length) return;
+    wordSpans[target].className = 'w lit';
+    var el = wordSpans[target];
     var r = el.getBoundingClientRect();
-    var margin = 80;
-    if (r.top < margin || r.bottom > window.innerHeight - margin) {
+    if (r.top < 80 || r.bottom > window.innerHeight - 80) {
       el.scrollIntoView({block:'center'});
     }
   });
