@@ -1446,6 +1446,32 @@ var apSpeeds = [0.75, 1, 1.25, 1.5, 1.75], apSpdIdx = 1;
 var apTimer = null;
 
 // ── INIT ─────────────────────────────────────────────────────
+
+// ── iOS AUDIO UNLOCK ─────────────────────────────────────
+// Safari requires a user gesture before any audio can play.
+// This creates and immediately suspends an AudioContext on
+// first touch, which unlocks audio for the entire session.
+var iosAudioUnlocked = false;
+function unlockiOSAudio() {
+  if (iosAudioUnlocked) return;
+  iosAudioUnlocked = true;
+  try {
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    var ctx = new AudioContext();
+    var buf = ctx.createBuffer(1, 1, 22050);
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    setTimeout(function() { ctx.close(); }, 100);
+  } catch(e) {}
+  document.removeEventListener('touchstart', unlockiOSAudio);
+  document.removeEventListener('touchend', unlockiOSAudio);
+}
+document.addEventListener('touchstart', unlockiOSAudio, {passive:true});
+document.addEventListener('touchend', unlockiOSAudio, {passive:true});
+
 document.addEventListener('DOMContentLoaded', function() {
   try {
     elInit();
@@ -2196,7 +2222,7 @@ function buildSegs(sb) {
   });
 }
 
-function apToggle() { if (apPlaying) apPause(); else apPlay(); }
+function apToggle() { unlockiOSAudio(); if (apPlaying) apPause(); else apPlay(); }
 
 function apPlay() {
   if (elAudio && !elAudio.paused && !elAudio.ended) return;
