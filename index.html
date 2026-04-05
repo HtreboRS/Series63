@@ -1,44 +1,25 @@
-<audio id="audio-player" controls>
-  <source src="audio-file.mp3" type="audio/mpeg">
-  Your browser does not support the audio tag.
-</audio>
-
 <script>
-const AUDIO_SYNC = {
-    highlights: [
-        { start: 0, end: 3, textId: 'text1' },
-        { start: 4, end: 7, textId: 'text2' }
-        // Add more timing data as needed
-    ],
-    currentHighlightIndex: 0,
+// AUDIO_SYNC system to sync words with audio playback
+const audio = document.querySelector('audio');
+const spans = document.querySelectorAll('.w');
 
-    init: function(audioElement) {
-        audioElement.addEventListener('timeupdate', () => {
-            this.updateHighlights(audioElement.currentTime);
-        });
-    },
+function highlightWords() {
+    let currentTime = audio.currentTime;
+    spans.forEach(span => {
+        const start = parseFloat(span.dataset.start);
+        const end = parseFloat(span.dataset.end);
 
-    updateHighlights: function(currentTime) {
-        this.highlights.forEach((highlight, index) => {
-            if (currentTime >= highlight.start && currentTime <= highlight.end) {
-                document.getElementById(highlight.textId).classList.add('highlight');
-                this.currentHighlightIndex = index;
-            } else {
-                document.getElementById(highlight.textId).classList.remove('highlight');
-            }
-        });
-    }
-};
-
-// Initialize audio sync
-const audioPlayer = document.getElementById('audio-player');
-AUDIO_SYNC.init(audioPlayer);
-
-</script>
-
-<style>
-.highlight {
-    transition: background-color 0.02s;
-    background-color: yellow;
+        if (currentTime >= start && currentTime <= end) {
+            span.classList.add('lit');
+            span.classList.remove('past');
+        } else if (currentTime > end) {
+            span.classList.add('past');
+            span.classList.remove('lit');
+        } else {
+            span.classList.remove('lit', 'past');
+        }
+    });
 }
-</style>
+
+audio.addEventListener('timeupdate', highlightWords);
+</script>
