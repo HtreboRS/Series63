@@ -134,6 +134,15 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-sans);font-
 }
 .sb-sub-item:hover{background:var(--sb2);color:var(--sb-txt)}
 .sb-sub-item.on{background:var(--sb-active-bg);color:#fff;border-left-color:var(--blue)}
+
+/* Standalone nav items (Home, My Progress, Wrapping Up) */
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;
+  border-left:3px solid transparent;color:#D4D7E8;font-weight:600;font-size:13px;
+  transition:background .12s,color .12s;}
+.ni:hover{background:var(--sb2);color:#fff}
+.ni.on{background:var(--sb-active-bg);color:#fff;border-left-color:var(--blue)}
+.ni-ico{font-size:14px;flex-shrink:0}
+.ni-lbl{flex:1}
 .sb-sub-num{font-weight:700;margin-right:6px;font-size:11px;flex-shrink:0;color:inherit}
 .sb-sub-lbl{flex:1;line-height:1.3}
 .sb-sub-check{font-size:11px;flex-shrink:0;margin-left:4px}
@@ -189,6 +198,66 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-sans);font-
 .hero-p{color:var(--ink3);font-size:13.5px;line-height:1.65;max-width:520px}
 
 .home-sections{display:flex;flex-direction:column;gap:8px}
+
+/* ── EXAM COUNTDOWN ── */
+/* Countdown — lives inside .home-hero */
+.hero-cd-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:16px;padding-top:14px;
+  border-top:1.5px solid rgba(37,99,235,.15);
+  flex-wrap:wrap;gap:10px;
+}
+.hero-cd-left{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.hero-cd-days-num{
+  font-family:var(--font-serif);font-size:38px;font-weight:700;
+  color:var(--blue);line-height:1;letter-spacing:-.02em;
+}
+.hero-cd-days-lbl{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+.hero-cd-msg{font-size:12px;color:var(--ink3);font-weight:500;margin-top:2px}
+.hero-cd-right{display:flex;gap:7px;align-items:center;flex-shrink:0}
+.cd-set-btn{
+  background:var(--blue-lt);border:1.5px solid var(--blue-md);color:var(--blue);
+  border-radius:var(--r-sm);padding:6px 12px;font-size:11px;font-weight:700;
+  font-family:var(--font-sans);cursor:pointer;transition:all .12s;
+}
+.cd-set-btn:hover{background:var(--blue-md)}
+.hero-cd-input-row{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(37,99,235,.12);
+  display:none;
+}
+.hero-cd-input-row.show{display:flex}
+.cd-date-in{
+  background:var(--card);border:1.5px solid var(--border);color:var(--ink);
+  border-radius:var(--r-sm);padding:7px 11px;font-size:13px;
+  font-family:var(--font-sans);outline:none;
+}
+.cd-date-in:focus{border-color:var(--blue)}
+.cd-save-btn{
+  background:var(--blue);border:none;color:#fff;
+  border-radius:var(--r-sm);padding:8px 14px;font-size:12px;font-weight:800;
+  font-family:var(--font-sans);cursor:pointer;
+}
+.cd-clear-btn{
+  background:none;border:1.5px solid var(--border);color:var(--ink3);
+  border-radius:var(--r-sm);padding:8px 10px;font-size:12px;font-weight:700;
+  font-family:var(--font-sans);cursor:pointer;
+}
+.home-progress-bar{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:16px 20px;margin-bottom:16px;
+}
+.hpb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.hpb-title{font-size:13px;font-weight:700;color:var(--ink)}
+.hpb-pct{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--blue)}
+.hpb-track{background:var(--paper3);border-radius:99px;height:10px;overflow:hidden;margin-bottom:8px;position:relative}
+.hpb-fill{height:10px;border-radius:99px;background:linear-gradient(90deg,var(--blue) 0%,#22D3EE 100%);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.hpb-labels{display:flex;justify-content:space-between;align-items:center}
+.hpb-done{font-size:12px;color:var(--ink3);font-weight:600}
+.hpb-goal{font-size:11px;color:var(--ghost);font-weight:600}
+.hpb-sections{display:flex;gap:4px;margin-top:10px;flex-wrap:nowrap;overflow:hidden;border-radius:6px}
+.hpb-sec{height:6px;border-radius:2px;flex:1;transition:background .3s}
 .home-sec-card{
   background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);
   padding:14px 16px;cursor:pointer;transition:border-color .14s,box-shadow .14s;
@@ -460,6 +529,8 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-sans);font-
       <select class="voice-sel" id="voice-sel" onchange="setVoice(this.value)">
         <option>Loading voices…</option>
       </select>
+      <div id="voice-note" style="font-size:10px;margin-top:5px;font-weight:700;letter-spacing:.02em;min-height:14px;"></div>
+      <div style="font-size:10px;color:var(--sb-dim);margin-top:3px;line-height:1.45;">Best quality: use <strong style="color:#93B4FD">Chrome</strong> on desktop or <strong style="color:#93B4FD">Safari</strong> on Mac/iPhone</div>
     </div>
   </div>
 </aside>
@@ -483,6 +554,41 @@ body{background:var(--paper);color:var(--ink);font-family:var(--font-sans);font-
         <div class="eyebrow">📋 NASAA · Uniform Securities Act</div>
         <h1 class="hero-h1">Your <em>Series 63</em> Study Hub</h1>
         <p class="hero-p">Structured exactly like Achievable · Audio read-along · Mini-quiz after each topic · Track your progress</p>
+        <!-- EXAM COUNTDOWN — merged into hero card -->
+        <div class="hero-cd-row">
+          <div>
+            <div class="hero-cd-left">
+              <div class="hero-cd-days-num" id="cd-days">--</div>
+              <div class="hero-cd-days-lbl">Days to Exam</div>
+            </div>
+            <div class="hero-cd-msg" id="cd-subtext">Tap "Set Date" to start your countdown</div>
+          </div>
+          <div class="hero-cd-right">
+            <button class="cd-set-btn" id="cd-set-btn" onclick="cdToggleEdit()">📅 Set Date</button>
+          </div>
+        </div>
+        <div class="hero-cd-input-row" id="cd-input-wrap">
+          <input type="date" class="cd-date-in" id="cd-date-input" />
+          <button class="cd-save-btn" onclick="cdSaveDate()">Save</button>
+          <button class="cd-clear-btn" onclick="cdClearDate()">Clear</button>
+        </div>
+      </div>
+
+      <!-- OVERALL PROGRESS BAR -->
+      <div class="home-progress-bar" id="home-prog-bar">
+        <div class="hpb-header">
+          <div class="hpb-title">📊 Your Overall Progress</div>
+          <div class="hpb-pct" id="hpb-pct">0%</div>
+        </div>
+        <div class="hpb-track">
+          <div class="hpb-fill" id="hpb-fill" style="width:0%"></div>
+        </div>
+        <div class="hpb-labels">
+          <div class="hpb-done" id="hpb-done">0 of 0 topics completed</div>
+          <div class="hpb-goal">Goal: Complete all topics</div>
+        </div>
+        <!-- per-section mini segments -->
+        <div class="hpb-sections" id="hpb-sections"></div>
       </div>
       <div class="home-sections" id="home-sections"></div>
     </div>
@@ -1115,30 +1221,90 @@ let wordSpans = [], curWordIdx = -1;
 let chunks = [], curChunk = 0;
 
 /* ─── VOICE INIT ─── */
-function loadVoices(){
+/* ─── VOICE ENGINE ───────────────────────────────────────
+   ALLOWED: Google neural voices only (Chrome)
+   BLOCKED: All Microsoft voices (robotic)
+   BLOCKED: All Apple voices (robotic on web)
+   FALLBACK: Show a "use Chrome" message if no Google voice
+─────────────────────────────────────────────────────── */
+function scoreVoice(v) {
+  const n = v.name;
+  // BLOCK Microsoft — always robotic
+  if (n.toLowerCase().includes('microsoft')) return -1;
+  // BLOCK Apple system voices — sound robotic in browser TTS
+  if (['Samantha','Alex','Karen','Moira','Daniel','Tessa','Rishi','Nicky',
+       'Ava','Victoria','Allison','Susan','Zoe','Tom','Fred','Junior','Agnes',
+       'Bahh','Bells','Boing','Bubbles','Cellos','Deranged','Good News',
+       'Hysterical','Pipe Organ','Princess','Ralph','Trinoids','Whisper','Zarvox'
+      ].some(a => n.includes(a))) return -1;
+  if (n.toLowerCase().includes('com.apple')) return -1;
+  // ALLOW: Google voices — neural, sound human
+  if (n.includes('Google US English'))        return 100;
+  if (n.includes('Google UK English Female')) return 95;
+  if (n.includes('Google UK English Male'))   return 88;
+  if (n.startsWith('Google'))                 return 80;
+  // Everything else blocked
+  return -1;
+}
+
+function voiceLabel(v) {
+  const n = v.name;
+  if (n.includes('Google US English'))        return '⭐ Google US English (Best)';
+  if (n.includes('Google UK English Female')) return '⭐ Google UK English';
+  if (n.startsWith('Google'))                 return '✨ ' + n;
+  return n;
+}
+
+function loadVoices() {
   allVoices = synth.getVoices();
-  if(!allVoices.length) return;
-  const PREF = ['Samantha','Alex','Karen','Google US English','Microsoft Aria Online','Microsoft Jenny Online','Google UK English Female'];
-  let enV = allVoices.filter(v=>v.lang.startsWith('en'));
-  enV.sort((a,b)=>{
-    const ai = PREF.findIndex(p=>a.name.includes(p));
-    const bi = PREF.findIndex(p=>b.name.includes(p));
-    return (ai<0?99:ai)-(bi<0?99:bi);
-  });
+  if (!allVoices.length) return;
+
+  // Google-only filter
+  const googleV = allVoices
+    .map(v => ({ v, score: scoreVoice(v) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.v);
+
   const sel = document.getElementById('voice-sel');
+  const noteEl = document.getElementById('voice-note');
   sel.innerHTML = '';
-  enV.forEach((v,i)=>{
+
+  if (!googleV.length) {
+    sel.innerHTML = '<option value="">No Google voice — open in Chrome</option>';
+    if (noteEl) {
+      noteEl.textContent = '⚠️ Open in Chrome for human-sounding voice';
+      noteEl.style.color = '#FCD34D';
+    }
+    voice = null;
+    return;
+  }
+
+  googleV.forEach((v, i) => {
     const o = document.createElement('option');
     o.value = v.name;
-    o.textContent = v.name + (v.localService?' (offline)':' ✨');
-    if(i===0){ o.selected=true; voice=v; }
+    o.textContent = voiceLabel(v);
+    if (i === 0) { o.selected = true; voice = v; }
     sel.appendChild(o);
   });
+
+  if (noteEl) {
+    noteEl.textContent = '✅ Google neural voice — sounds human';
+    noteEl.style.color = '#4ADE80';
+  }
 }
-function setVoice(name){
-  voice = allVoices.find(v=>v.name===name)||null;
-  if(apPlaying){ apStop(); setTimeout(()=>apPlay(),80); }
+
+function setVoice(name) {
+  const v = allVoices.find(v => v.name === name);
+  if (!v || scoreVoice(v) < 0) {
+    const noteEl = document.getElementById('voice-note');
+    if (noteEl) { noteEl.textContent = '🚫 Only Google voices allowed'; noteEl.style.color = '#FCA5A5'; }
+    return;
+  }
+  voice = v;
+  if (apPlaying) { apStop(); setTimeout(() => apPlay(), 80); }
 }
+
 synth.onvoiceschanged = loadVoices;
 loadVoices();
 
@@ -1451,120 +1617,115 @@ function mqRetake(){
 ═══════════════════════════════════════════════════════════ */
 function initPlayer(){
   apStop();
-  const sb=TREE[curSec].subs[curSub];
-  const text=sb.paragraphs.join(' ');
-  const words=text.split(/\s+/);
-  apTotalSec=Math.round(words.length/(130*apSpeed/60));
-  apElapsed=0;
-  buildChunks(sb);
-  buildSegs(sb);
+  const sb = TREE[curSec].subs[curSub];
+  apBuildText(sb);
+  apTotalSec = Math.round(apAllWords.length / (130 * apSpeed / 60));
+  apElapsed  = 0;
+  // No paragraph segments — single-utterance mode
+  document.getElementById('ap-segs').innerHTML = '';
   updateScrubber(); updateTimeDisplay();
   document.getElementById('ap-dot').classList.remove('show');
-  document.getElementById('ap-now').textContent='Tap ▶ to hear this lesson read aloud';
+  document.getElementById('ap-now').textContent = 'Tap ▶ to hear this lesson read aloud';
 }
 
-function buildChunks(sb){
-  chunks=[];
-  let wc=0;
-  sb.paragraphs.forEach((p,pi)=>{
-    const w=p.trim().split(/\s+/);
-    chunks.push({text:p.trim(),start:wc,end:wc+w.length-1,startSec:(wc/(130*apSpeed/60)),pi});
-    wc+=w.length;
-  });
-}
-function buildSegs(sb){
-  const total=wordSpans.length;
-  let h='';
-  sb.paragraphs.forEach((p,pi)=>{
-    const w=p.trim().split(/\s+/).length;
-    const flex=Math.max((w/total)*100,3).toFixed(1);
-    const tip=p.substring(0,55);
-    h+=`<div class="ap-seg" id="apseg-${pi}" style="flex:${flex}" onclick="jumpChunk(${pi})"><span class="ap-seg-tip">${tip}…</span></div>`;
-  });
-  document.getElementById('ap-segs').innerHTML=h;
+/* ── SINGLE-UTTERANCE AUDIO ENGINE ────────────────────────
+   Reads the ENTIRE subsection as one fluid speech.
+   No paragraph chopping = natural, human-sounding delivery.
+   −15s/+15s skip rebuilds the utterance from the new offset.
+──────────────────────────────────────────────────────── */
+let apFullText = '';
+let apAllWords = [];
+let apActiveU  = null;
+
+function apBuildText(sb){
+  // Double-space between paragraphs so TTS adds a natural pause
+  apFullText = sb.paragraphs.map(p => p.trim()).join('  ');
+  apAllWords  = apFullText.split(/\s+/);
 }
 
-function apToggle(){if(apPlaying) apPause();else apPlay();}
+function apToggle(){ if(apPlaying) apPause(); else apPlay(); }
+
 function apPlay(){
-  if(!synth){alert('Text-to-speech not supported in this browser.');return;}
+  if(!synth){ alert('Text-to-speech not supported in this browser.'); return; }
   synth.cancel();
-  const wpm=130*apSpeed;
-  const fromWord=Math.round(apElapsed*wpm/60);
-  let startChunk=0;
-  chunks.forEach((c,i)=>{if(c.start<=fromWord) startChunk=i;});
-  curChunk=startChunk;
-  speakChunk(startChunk,fromWord);
-}
-function speakChunk(ci2,fromWord){
-  if(ci2>=chunks.length){apDone();return;}
-  const c=chunks[ci2];
-  let text=c.text, wOff=c.start;
-  if(fromWord>c.start){
-    const skip=fromWord-c.start;
-    text=c.text.split(/\s+/).slice(skip).join(' ');
-    wOff=fromWord;
-  }
-  const u=new SpeechSynthesisUtterance(text);
-  u.rate=apSpeed; u.pitch=1; u.volume=1;
-  if(voice) u.voice=voice;
-  document.getElementById('ap-dot').classList.add('show');
-  document.getElementById('ap-now').textContent=c.text.substring(0,75)+(c.text.length>75?'…':'');
-  u.onboundary=function(e){
-    if(e.name!=='word') return;
-    const wps=text.split(/\s+/).length;
-    const est=wOff+Math.round(e.charIndex/Math.max(text.length/wps,1));
-    hlWord(Math.min(est,wordSpans.length-1));
+
+  // Calculate start-word from elapsed time
+  const wpm      = 130 * apSpeed;
+  const fromWord = Math.min(Math.round(apElapsed * wpm / 60), apAllWords.length - 1);
+  const slice    = apAllWords.slice(fromWord).join(' ');
+
+  const u = new SpeechSynthesisUtterance(slice);
+  u.rate   = apSpeed * 0.92;   // 0.92× = natural presenter pace
+  u.pitch  = 1.0;
+  u.volume = 1.0;
+  if(voice) u.voice = voice;
+  apActiveU = u;
+
+  const dotEl = document.getElementById('ap-dot');
+  const nowEl = document.getElementById('ap-now');
+  if(dotEl) dotEl.classList.add('show');
+  if(nowEl) nowEl.textContent = slice.substring(0,70) + (slice.length>70?'\u2026':'');
+
+  // Word-by-word highlight via onboundary
+  const avgCPW = slice.length / Math.max(apAllWords.slice(fromWord).length, 1);
+  u.onboundary = function(e){
+    if(e.name !== 'word') return;
+    const local  = Math.round(e.charIndex / Math.max(avgCPW, 1));
+    const global = fromWord + local;
+    hlWord(Math.min(global, wordSpans.length - 1));
   };
-  u.onend=function(){
-    if(!apPlaying) return;
-    curChunk++;
-    if(curChunk<chunks.length){
-      apElapsed=chunks[curChunk].startSec;
-      speakChunk(curChunk,chunks[curChunk].start);
-    } else {apDone();}
-  };
-  u.onerror=function(){apPlaying=false;setPlayIco(false);clearInterval(apTimer);};
+
+  u.onend   = function(){ if(apPlaying) apDone(); };
+  u.onerror = function(){ apPlaying=false; setPlayIco(false); clearInterval(apTimer); };
+
   synth.speak(u);
-  apPlaying=true; setPlayIco(true);
+  apPlaying = true; setPlayIco(true);
+
   clearInterval(apTimer);
-  apTimer=setInterval(()=>{
+  apTimer = setInterval(()=>{
     if(!apPlaying) return;
-    apElapsed=Math.min(apElapsed+.2,apTotalSec);
-    updateScrubber(); updateTimeDisplay(); updateSegs();
-  },200);
+    apElapsed = Math.min(apElapsed + 0.2, apTotalSec);
+    updateScrubber(); updateTimeDisplay();
+  }, 200);
 }
+
 function apDone(){
-  apPlaying=false; setPlayIco(false); clearHl();
+  apPlaying = false; setPlayIco(false); clearHl();
   clearInterval(apTimer);
-  document.getElementById('ap-dot').classList.remove('show');
-  document.getElementById('ap-now').textContent='Finished — press play to restart';
-  setTimeout(()=>{apElapsed=0;updateScrubber();updateTimeDisplay();},1500);
+  const dotEl = document.getElementById('ap-dot');
+  const nowEl = document.getElementById('ap-now');
+  if(dotEl) dotEl.classList.remove('show');
+  if(nowEl) nowEl.textContent = 'Finished — press play to restart';
+  setTimeout(()=>{ apElapsed=0; updateScrubber(); updateTimeDisplay(); }, 1500);
 }
+
 function apPause(){
-  synth.pause(); apPlaying=false; setPlayIco(false);
+  synth.pause();
+  apPlaying = false; setPlayIco(false);
   clearInterval(apTimer);
-  document.getElementById('ap-dot').classList.remove('show');
+  const dotEl = document.getElementById('ap-dot');
+  if(dotEl) dotEl.classList.remove('show');
 }
+
 function apStop(){
   if(synth) synth.cancel();
-  apPlaying=false; clearInterval(apTimer); clearHl();
-  if(document.getElementById('ap-play')) setPlayIco(false);
-  if(document.getElementById('ap-dot')) document.getElementById('ap-dot').classList.remove('show');
+  apActiveU  = null;
+  apPlaying  = false;
+  clearInterval(apTimer); clearHl();
+  const pb = document.getElementById('ap-play');
+  const pd = document.getElementById('ap-dot');
+  if(pb) setPlayIco(false);
+  if(pd) pd.classList.remove('show');
 }
+
 function apSkip(s){
-  const was=apPlaying;
+  const was = apPlaying;
   apPause(); synth.cancel();
-  apElapsed=Math.max(0,Math.min(apElapsed+s,apTotalSec));
+  apElapsed = Math.max(0, Math.min(apElapsed + s, apTotalSec));
   updateScrubber(); updateTimeDisplay();
-  if(was) setTimeout(()=>apPlay(),80);
+  if(was) setTimeout(()=> apPlay(), 80);
 }
-function jumpChunk(pi){
-  const was=apPlaying;
-  apPause(); synth.cancel();
-  apElapsed=chunks[pi].startSec;
-  updateScrubber(); updateTimeDisplay();
-  if(was) setTimeout(()=>apPlay(),80);
-}
+
 
 /* Scrubber */
 let scrubbing=false;
@@ -1594,12 +1755,12 @@ function scrubTouchMove(e){
   apElapsed=p*apTotalSec; updateScrubber(); updateTimeDisplay();
 }
 function cycleSpeed(){
-  spIdx=(spIdx+1)%SPEEDS.length; apSpeed=SPEEDS[spIdx];
-  apTotalSec=Math.round(wordSpans.length/(130*apSpeed/60));
-  if(TREE[curSec]&&TREE[curSec].subs[curSub]) buildChunks(TREE[curSec].subs[curSub]);
-  document.getElementById('ap-spd').textContent=apSpeed+'×';
+  spIdx = (spIdx+1) % SPEEDS.length;
+  apSpeed = SPEEDS[spIdx];
+  apTotalSec = Math.round(apAllWords.length / (130 * apSpeed / 60));
+  document.getElementById('ap-spd').textContent = apSpeed + '×';
   updateTimeDisplay();
-  if(apPlaying){const e2=apElapsed;apPause();synth.cancel();apElapsed=e2;setTimeout(()=>apPlay(),80);}
+  if(apPlaying){ const e2=apElapsed; apPause(); synth.cancel(); apElapsed=e2; setTimeout(()=>apPlay(),80); }
 }
 function updateScrubber(){
   const p=apTotalSec>0?Math.min(apElapsed/apTotalSec*100,100):0;
@@ -1610,14 +1771,8 @@ function updateTimeDisplay(){
   const f=s=>{const m=Math.floor(s/60),sc=Math.floor(s%60);return m+':'+(sc<10?'0':'')+sc;};
   document.getElementById('ap-time').textContent=f(Math.min(apElapsed,apTotalSec))+' / '+f(apTotalSec);
 }
-function updateSegs(){
-  chunks.forEach((c,i)=>{
-    const el=document.getElementById('apseg-'+i);
-    if(!el) return;
-    const next=chunks[i+1];
-    el.className='ap-seg'+(apElapsed>=(next?next.startSec:apTotalSec+1)?' s-done':apElapsed>=c.startSec?' s-active':'');
-  });
-}
+// updateSegs removed — single-utterance mode has no segments
+
 function setPlayIco(playing){
   const btn=document.getElementById('ap-play');
   const ico=document.getElementById('ap-ico');
@@ -1847,7 +2002,7 @@ function buildHome(){
    OVERALL PROGRESS
 ═══════════════════════════════════════════════════════════ */
 function updateOvr(){
-  let total=0,done=0;
+  let total=0, done=0;
   TREE.forEach(s=>{
     if(s.isWrap) return;
     s.subs.forEach(sb=>{
@@ -1856,9 +2011,117 @@ function updateOvr(){
       if(subProgress[sb.id]) done++;
     });
   });
-  const pct=total?Math.round(done/total*100):0;
-  document.getElementById('sb-opct').textContent=pct+'%';
-  document.getElementById('sb-obar').style.width=pct+'%';
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  // Sidebar mini bar
+  document.getElementById('sb-opct').textContent = pct+'%';
+  document.getElementById('sb-obar').style.width = pct+'%';
+
+  // Home page progress bar
+  const hpbPct  = document.getElementById('hpb-pct');
+  const hpbFill = document.getElementById('hpb-fill');
+  const hpbDone = document.getElementById('hpb-done');
+  const hpbSecs = document.getElementById('hpb-sections');
+  if(hpbPct)  hpbPct.textContent  = pct+'%';
+  if(hpbFill) hpbFill.style.width = pct+'%';
+  if(hpbDone) hpbDone.textContent = done+' of '+total+' topics completed';
+
+  // Per-section color segments under the bar
+  if(hpbSecs){
+    let segsH = '';
+    TREE.forEach(s=>{
+      if(s.isWrap) return;
+      const qSubs = s.subs.filter(sb=>sb.quiz&&sb.quiz.length);
+      if(!qSubs.length) return;
+      const sDone = qSubs.filter(sb=>subProgress[sb.id]).length;
+      const sPct  = Math.round(sDone/qSubs.length*100);
+      // Each section gets a proportional-width segment, colored by completion
+      const flexW = qSubs.length;
+      let segCol = '#D6D0C8'; // empty - border color
+      if(sPct>=80)      segCol = 'var(--green)';
+      else if(sPct>=40) segCol = 'var(--amber)';
+      else if(sPct>0)   segCol = 'var(--blue)';
+      segsH += `<div title="${s.label}: ${sPct}%" style="flex:${flexW};height:6px;border-radius:2px;background:${segCol};transition:background .4s" ></div>`;
+    });
+    hpbSecs.innerHTML = '<div style="display:flex;gap:3px;width:100%">'+segsH+'</div>';
+  }
+
+  // Change bar gradient color when complete
+  if(hpbFill){
+    if(pct>=80)       hpbFill.style.background='linear-gradient(90deg,var(--green),#34D399)';
+    else if(pct>=50)  hpbFill.style.background='linear-gradient(90deg,var(--blue),#22D3EE)';
+    else              hpbFill.style.background='linear-gradient(90deg,var(--blue),#60A5FA)';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXAM COUNTDOWN
+═══════════════════════════════════════════════════════════ */
+const CD_KEY = 's63_exam_date';
+
+function cdInit(){
+  const saved = localStorage.getItem(CD_KEY);
+  if(saved){
+    document.getElementById('cd-date-input').value = saved;
+    cdRender(saved);
+  }
+}
+
+function cdToggleEdit(){
+  const wrap = document.getElementById('cd-input-wrap');
+  wrap.classList.toggle('show');
+  const btn = document.getElementById('cd-set-btn');
+  btn.textContent = wrap.classList.contains('show') ? '✕ Cancel' : '📅 Set Date';
+}
+
+function cdSaveDate(){
+  const val = document.getElementById('cd-date-input').value;
+  if(!val) return;
+  localStorage.setItem(CD_KEY, val);
+  cdRender(val);
+  document.getElementById('cd-input-wrap').classList.remove('show');
+  document.getElementById('cd-set-btn').textContent = '📅 Edit Date';
+}
+
+function cdClearDate(){
+  localStorage.removeItem(CD_KEY);
+  document.getElementById('cd-date-input').value = '';
+  document.getElementById('cd-days').textContent = '--';
+  document.getElementById('cd-subtext').textContent = 'Tap "Set Date" to start your countdown';
+  document.getElementById('cd-input-wrap').classList.remove('show');
+  document.getElementById('cd-set-btn').textContent = '📅 Set Date';
+}
+
+function cdRender(dateStr){
+  // Days only — simple, no ticker needed
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const exam = new Date(dateStr + 'T00:00:00');
+  exam.setHours(0,0,0,0);
+  const diffMs = exam - today;
+  const d = Math.round(diffMs / 86400000);
+
+  const daysEl = document.getElementById('cd-days');
+  const msgEl  = document.getElementById('cd-subtext');
+  const btnEl  = document.getElementById('cd-set-btn');
+
+  if(d < 0){
+    daysEl.textContent = '0';
+    msgEl.textContent  = 'Exam date has passed — update your date';
+    msgEl.style.color  = 'var(--red)';
+  } else if(d === 0){
+    daysEl.textContent = '0';
+    msgEl.textContent  = "🎯 Exam day — you've got this!";
+    msgEl.style.color  = 'var(--green)';
+  } else {
+    daysEl.textContent = d;
+    if(d <= 3)       { msgEl.textContent = '🔥 Final stretch — focus on weak areas'; msgEl.style.color = 'var(--red)'; }
+    else if(d <= 7)  { msgEl.textContent = '📖 One week out — one topic per day'; msgEl.style.color = 'var(--amber)'; }
+    else if(d <= 30) { msgEl.textContent = '📚 Good pacing — stay consistent'; msgEl.style.color = 'var(--ink3)'; }
+    else             { msgEl.textContent = 'Keep studying — you have time'; msgEl.style.color = 'var(--ink3)'; }
+  }
+
+  if(btnEl) btnEl.textContent = '📅 Edit Date';
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1875,6 +2138,7 @@ function toggleHic(){hic=!hic;document.body.classList.toggle('hic',hic);document
 buildSbNav();
 buildHome();
 updateOvr();
+cdInit();
 document.addEventListener('visibilitychange',()=>{if(document.hidden)apStop();});
 window.addEventListener('beforeunload',()=>synth&&synth.cancel());
 </script>
