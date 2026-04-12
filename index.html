@@ -8,316 +8,497 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --paper: #F5F3EE;
-  --paper2: #EDE9E2;
-  --paper3: #E2DDD5;
-  --card: #FFFFFF;
-  --border: #D6D0C8;
-  --ink: #1A1C2A;
-  --ink2: #3A3D52;
-  --ink3: #6B6F85;
-  --ghost: #9EA2B5;
-  --sb: #2A2D3A;
-  --sb2: #353848;
-  --sb3: #424659;
-  --sb-border: #404358;
-  --sb-txt: #C8CCDF;
-  --sb-dim: #8B8FA8;
-  --sb-active-bg: #3B4060;
-  --blue: #2563EB;
-  --blue-lt: #EEF3FD;
-  --blue-md: #BAC9F8;
-  --green: #16A34A;
-  --green-lt: #EDFBF2;
-  --red: #DC2626;
-  --red-lt: #FEF2F2;
-  --amber: #D97706;
-  --amber-lt: #FFFBEB;
-  --r: 13px;
-  --r-sm: 8px;
-  --fs: 16.5px;
-  --lh: 1.82;
-  --ls: 0.01em;
+  /* Paper side */
+  --paper:       #F5F3EE;
+  --paper2:      #EDE9E2;
+  --paper3:      #E2DDD5;
+  --card:        #FFFFFF;
+  --border:      #D6D0C8;
+
+  /* Ink */
+  --ink:         #1A1C2A;
+  --ink2:        #3A3D52;
+  --ink3:        #6B6F85;
+  --ghost:       #9EA2B5;
+
+  /* Sidebar */
+  --sb:          #2A2D3A;
+  --sb2:         #353848;
+  --sb3:         #424659;
+  --sb-border:   #404358;
+  --sb-txt:      #C8CCDF;
+  --sb-dim:      #8B8FA8;
+  --sb-active-bg:#3B4060;
+
+  /* Accent */
+  --blue:        #2563EB;
+  --blue-lt:     #EEF3FD;
+  --blue-md:     #BAC9F8;
+  --green:       #16A34A;
+  --green-lt:    #EDFBF2;
+  --red:         #DC2626;
+  --red-lt:      #FEF2F2;
+  --amber:       #D97706;
+  --amber-lt:    #FFFBEB;
+
+  --r:    13px;
+  --r-sm:  8px;
+  --fs:   16.5px;
+  --lh:   1.82;
+  --ls:   0.01em;
   --sb-w: 272px;
+
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-serif: 'Lora', Georgia, serif;
 }
 
-body.dys, body.dys * { font-family: 'OpenDyslexic', var(--font-sans) !important; }
-body.wsp { --ls: 0.05em; --lh: 2.08; word-spacing: 0.12em; }
-body.fsl { --fs: 19.5px; }
-body.fsx { --fs: 22.5px; }
-body.hic { --paper: #fff; --paper2: #f0f0f0; --paper3: #e0e0e0; --card: #fff; --border: #bbb; --ink: #000; --ink2: #111; --ink3: #333; }
+/* ── ACCESSIBILITY ── */
+body.dys,body.dys *{font-family:'OpenDyslexic',var(--font-sans)!important}
+body.wsp{--ls:0.05em;--lh:2.08;word-spacing:.12em}
+body.fsl{--fs:19.5px} body.fsx{--fs:22.5px}
+body.hic{--paper:#fff;--paper2:#f0f0f0;--paper3:#e0e0e0;--card:#fff;--border:#bbb;--ink:#000;--ink2:#111;--ink3:#333}
+@font-face{font-family:'OpenDyslexic';src:url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/ttf/OpenDyslexic-Regular.ttf') format('truetype')}
 
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/ttf/OpenDyslexic-Regular.ttf') format('truetype');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-sans);font-size:var(--fs);line-height:var(--lh);letter-spacing:var(--ls);min-height:100vh;overflow-x:hidden}
+.hidden{display:none!important}
+.fa{animation:fadeUp .2s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ════════════════ LAYOUT ════════════════ */
+.app{display:flex;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sb-w);flex-shrink:0;
+  background:var(--sb);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;
+  z-index:300;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  transition:transform .27s cubic-bezier(.4,0,.2,1);
+  scrollbar-width:thin;scrollbar-color:var(--sb3) transparent;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--sb3);border-radius:2px}
+
+/* Sidebar brand */
+.sb-brand{
+  padding:20px 20px 16px;
+  border-bottom:1px solid var(--sb-border);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:var(--sb);z-index:2;flex-shrink:0;
+}
+.sb-logo{display:flex;align-items:baseline;gap:7px}
+.sb-num{font-family:var(--font-serif);font-size:26px;font-weight:700;color:#fff;line-height:1}
+.sb-tag{font-size:9px;font-weight:700;letter-spacing:.16em;color:var(--sb-dim);text-transform:uppercase}
+.sb-close{display:none;background:var(--sb2);border:1px solid var(--sb-border);color:var(--sb-dim);width:30px;height:30px;border-radius:6px;font-size:16px;cursor:pointer;align-items:center;justify-content:center}
+
+/* Overall progress */
+.sb-prog{padding:12px 20px;border-bottom:1px solid var(--sb-border)}
+.sb-prog-row{display:flex;justify-content:space-between;font-size:11px;color:var(--sb-dim);margin-bottom:5px;font-weight:600}
+.prog-track{background:var(--sb3);border-radius:99px;height:4px;overflow:hidden}
+.prog-fill{height:4px;border-radius:99px;background:linear-gradient(90deg,var(--blue),#22D3EE);transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+/* Nav tree */
+.sb-nav{flex:1;padding:8px 0 20px}
+.sb-section{margin-bottom:2px}
+.sb-sec-btn{
+  width:100%;display:flex;align-items:center;gap:8px;
+  padding:10px 20px;background:none;border:none;
+  color:var(--sb-txt);cursor:pointer;text-align:left;
+  font-family:var(--font-sans);font-size:13px;font-weight:700;
+  transition:background .12s,color .12s;letter-spacing:.01em;
+}
+.sb-sec-btn:hover{background:var(--sb2);color:#fff}
+.sb-sec-btn.active-sec{color:#fff}
+.sb-sec-ico{font-size:14px;flex-shrink:0}
+.sb-sec-lbl{flex:1}
+.sb-sec-arrow{font-size:11px;color:var(--sb-dim);transition:transform .2s;flex-shrink:0}
+.sb-sec-arrow.open{transform:rotate(180deg)}
+.sb-sec-score{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;flex-shrink:0}
+.sc-g{background:rgba(22,163,74,.2);color:#4ADE80}
+.sc-y{background:rgba(217,119,6,.2);color:#FCD34D}
+.sc-r{background:rgba(220,38,38,.2);color:#FCA5A5}
+
+/* Sub-items */
+.sb-subs{overflow:hidden;transition:max-height .25s ease}
+.sb-sub-item{
+  display:flex;align-items:center;gap:0;
+  padding:8px 20px 8px 44px;cursor:pointer;
+  font-size:12px;color:var(--sb-dim);
+  transition:background .1s,color .1s;
+  border-left:3px solid transparent;
+  margin-left:0;
+}
+.sb-sub-item:hover{background:var(--sb2);color:var(--sb-txt)}
+.sb-sub-item.on{background:var(--sb-active-bg);color:#fff;border-left-color:var(--blue)}
+
+/* Standalone nav items (Home, My Progress, Wrapping Up) */
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;
+  border-left:3px solid transparent;color:#D4D7E8;font-weight:600;font-size:13px;
+  transition:background .12s,color .12s;}
+.ni:hover{background:var(--sb2);color:#fff}
+.ni.on{background:var(--sb-active-bg);color:#fff;border-left-color:var(--blue)}
+.ni-ico{font-size:14px;flex-shrink:0}
+.ni-lbl{flex:1}
+.sb-sub-num{font-weight:700;margin-right:6px;font-size:11px;flex-shrink:0;color:inherit}
+.sb-sub-lbl{flex:1;line-height:1.3}
+.sb-sub-check{font-size:11px;flex-shrink:0;margin-left:4px}
+
+/* Settings at bottom of sidebar */
+.sb-foot{padding:14px 20px;border-top:1px solid var(--sb-border);flex-shrink:0}
+.sb-foot-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sb-dim);margin-bottom:8px}
+.tog-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:5px}
+.tog{padding:7px 4px;background:var(--sb2);border:1px solid var(--sb-border);border-radius:var(--r-sm);color:var(--sb-dim);cursor:pointer;font-size:10px;font-weight:700;font-family:var(--font-sans);text-align:center;transition:all .13s}
+.tog:hover{border-color:var(--blue);color:var(--blue)}
+.tog.on{background:rgba(37,99,235,.2);border-color:var(--blue);color:#93B4FD}
+.voice-wrap{margin-top:8px}
+.voice-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sb-dim);margin-bottom:4px}
+.voice-sel{width:100%;background:var(--sb2);border:1px solid var(--sb-border);color:var(--sb-txt);border-radius:var(--r-sm);padding:7px 9px;font-size:11px;font-family:var(--font-sans);cursor:pointer;outline:none;-webkit-appearance:none}
+.voice-sel:focus{border-color:var(--blue)}
+
+/* ── MAIN PANEL ── */
+.main-panel{
+  margin-left:var(--sb-w);flex:1;
+  display:flex;flex-direction:column;
+  min-height:100vh;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { scroll-behavior: smooth; }
-body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  font-size: var(--fs);
-  line-height: var(--lh);
-  letter-spacing: var(--ls);
-  min-height: 100vh;
-  overflow-x: hidden;
+/* ── TOPBAR (mobile / section title) ── */
+.topbar{
+  position:sticky;top:0;z-index:200;
+  height:56px;
+  background:rgba(245,243,238,.94);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1.5px solid var(--border);
+  display:flex;align-items:center;gap:10px;padding:0 18px;
+  flex-shrink:0;
 }
+.tb-ham{display:none;background:none;border:none;color:var(--ink3);font-size:20px;cursor:pointer;padding:6px;border-radius:6px}
+.tb-title{font-size:14px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.tb-tabs{display:flex;gap:4px;flex-shrink:0}
+.tbt{padding:6px 12px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--card);color:var(--ink3);cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font-sans);white-space:nowrap;letter-spacing:.04em;transition:all .13s}
+.tbt:hover{border-color:var(--blue);color:var(--blue)}
+.tbt.on{background:var(--blue);border-color:var(--blue);color:#fff}
 
-.hidden { display: none !important; }
-.fa { animation: fadeUp 0.2s ease both; }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+/* ── CONTENT ── */
+.content-area{flex:1;padding:28px 32px 60px;max-width:760px}
 
-.app { display: flex; min-height: 100vh; }
-
-.sidebar {
-  width: var(--sb-w);
-  flex-shrink: 0;
-  background: var(--sb);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 300;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  transition: transform 0.27s cubic-bezier(0.4, 0, 0.2, 1);
-  scrollbar-width: thin;
-  scrollbar-color: var(--sb3) transparent;
+/* ── HOME ── */
+.home-hero{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:28px 26px 24px;margin-bottom:24px;position:relative;overflow:hidden;
 }
+.home-hero::after{content:'63';font-family:var(--font-serif);position:absolute;right:-6px;bottom:-18px;font-size:140px;color:rgba(37,99,235,.05);line-height:1;pointer-events:none;user-select:none}
+.eyebrow{display:inline-flex;align-items:center;gap:5px;background:var(--blue-lt);border:1.5px solid var(--blue-md);color:var(--blue);border-radius:99px;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:.07em;margin-bottom:12px}
+.hero-h1{font-family:var(--font-serif);font-size:clamp(22px,4vw,28px);font-weight:700;color:var(--ink);line-height:1.22;margin-bottom:8px}
+.hero-h1 em{font-style:italic;color:var(--blue)}
+.hero-p{color:var(--ink3);font-size:13.5px;line-height:1.65;max-width:520px}
 
-.sidebar::-webkit-scrollbar { width: 4px; }
-.sidebar::-webkit-scrollbar-thumb { background: var(--sb3); border-radius: 2px; }
+.home-sections{display:flex;flex-direction:column;gap:8px}
 
-.sb-brand {
-  padding: 20px;
-  border-bottom: 1px solid var(--sb-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  background: var(--sb);
-  z-index: 2;
-  flex-shrink: 0;
+/* ── EXAM COUNTDOWN ── */
+/* Countdown — lives inside .home-hero */
+.hero-cd-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:16px;padding-top:14px;
+  border-top:1.5px solid rgba(37,99,235,.15);
+  flex-wrap:wrap;gap:10px;
 }
-
-.sb-logo { display: flex; align-items: baseline; gap: 7px; }
-.sb-num { font-family: var(--font-serif); font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
-.sb-tag { font-size: 9px; font-weight: 700; letter-spacing: 0.16em; color: var(--sb-dim); text-transform: uppercase; }
-.sb-close {
-  display: none;
-  background: var(--sb2);
-  border: 1px solid var(--sb-border);
-  color: var(--sb-dim);
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
+.hero-cd-left{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.hero-cd-days-num{
+  font-family:var(--font-serif);font-size:38px;font-weight:700;
+  color:var(--blue);line-height:1;letter-spacing:-.02em;
 }
-
-.sb-prog { padding: 12px 20px; border-bottom: 1px solid var(--sb-border); }
-.sb-prog-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--sb-dim); margin-bottom: 5px; font-weight: 600; }
-.prog-track { background: var(--sb3); border-radius: 99px; height: 4px; overflow: hidden; }
-.prog-fill { height: 4px; border-radius: 99px; background: linear-gradient(90deg, var(--blue), #22D3EE); transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-
-.sb-nav { flex: 1; padding: 8px 0 20px; }
-.sb-section { margin-bottom: 2px; }
-.sb-sec-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: none;
-  border: none;
-  color: var(--sb-txt);
-  cursor: pointer;
-  text-align: left;
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 700;
-  transition: background 0.12s, color 0.12s;
-  letter-spacing: 0.01em;
+.hero-cd-days-lbl{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+.hero-cd-msg{font-size:12px;color:var(--ink3);font-weight:500;margin-top:2px}
+.hero-cd-right{display:flex;gap:7px;align-items:center;flex-shrink:0}
+.cd-set-btn{
+  background:var(--blue-lt);border:1.5px solid var(--blue-md);color:var(--blue);
+  border-radius:var(--r-sm);padding:6px 12px;font-size:11px;font-weight:700;
+  font-family:var(--font-sans);cursor:pointer;transition:all .12s;
 }
-
-.sb-sec-btn:hover { background: var(--sb2); color: #fff; }
-.sb-sec-btn.active-sec { color: #fff; }
-.sb-sec-ico { font-size: 14px; flex-shrink: 0; }
-.sb-sec-lbl { flex: 1; }
-.sb-sec-arrow { font-size: 11px; color: var(--sb-dim); transition: transform 0.2s; flex-shrink: 0; }
-.sb-sec-arrow.open { transform: rotate(180deg); }
-.sb-sec-score { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
-.sc-g { background: rgba(22, 163, 74, 0.2); color: #4ADE80; }
-.sc-y { background: rgba(217, 119, 6, 0.2); color: #FCD34D; }
-.sc-r { background: rgba(220, 38, 38, 0.2); color: #FCA5A5; }
-
-.sb-subs { overflow: hidden; transition: max-height 0.25s ease; }
-.sb-sub-item {
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding: 8px 20px 8px 44px;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--sb-dim);
-  transition: background 0.1s, color 0.1s;
-  border-left: 3px solid transparent;
-  margin-left: 0;
+.cd-set-btn:hover{background:var(--blue-md)}
+.hero-cd-input-row{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(37,99,235,.12);
+  display:none;
 }
-
-.sb-sub-item:hover { background: var(--sb2); color: var(--sb-txt); }
-.sb-sub-item.on { background: var(--sb-active-bg); color: #fff; border-left-color: var(--blue); }
-
-.ni {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-left: 3px solid transparent;
-  color: #D4D7E8;
-  font-weight: 600;
-  font-size: 13px;
-  transition: background 0.12s, color 0.12s;
+.hero-cd-input-row.show{display:flex}
+.cd-date-in{
+  background:var(--card);border:1.5px solid var(--border);color:var(--ink);
+  border-radius:var(--r-sm);padding:7px 11px;font-size:13px;
+  font-family:var(--font-sans);outline:none;
 }
-
-.ni:hover { background: var(--sb2); color: #fff; }
-.ni.on { background: var(--sb-active-bg); color: #fff; border-left-color: var(--blue); }
-.ni-ico { font-size: 14px; flex-shrink: 0; }
-.ni-lbl { flex: 1; }
-.sb-sub-num { font-weight: 700; margin-right: 6px; font-size: 11px; flex-shrink: 0; color: inherit; }
-.sb-sub-lbl { flex: 1; line-height: 1.3; }
-.sb-sub-check { font-size: 11px; flex-shrink: 0; margin-left: 4px; }
-
-.sb-foot { padding: 14px 20px; border-top: 1px solid var(--sb-border); flex-shrink: 0; }
-.sb-foot-label { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sb-dim); margin-bottom: 8px; }
-.tog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
-.tog {
-  padding: 7px 4px;
-  background: var(--sb2);
-  border: 1px solid var(--sb-border);
-  border-radius: var(--r-sm);
-  color: var(--sb-dim);
-  cursor: pointer;
-  font-size: 10px;
-  font-weight: 700;
-  font-family: var(--font-sans);
-  text-align: center;
-  transition: all 0.12s;
+.cd-date-in:focus{border-color:var(--blue)}
+.cd-save-btn{
+  background:var(--blue);border:none;color:#fff;
+  border-radius:var(--r-sm);padding:8px 14px;font-size:12px;font-weight:800;
+  font-family:var(--font-sans);cursor:pointer;
 }
-
-.tog:hover { border-color: var(--blue); color: var(--blue); }
-.tog.on { background: rgba(37, 99, 235, 0.2); border-color: var(--blue); color: #93B4FD; }
-.voice-wrap { margin-top: 8px; }
-.voice-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sb-dim); margin-bottom: 4px; }
-.voice-sel {
-  width: 100%;
-  background: var(--sb2);
-  border: 1px solid var(--sb-border);
-  color: var(--sb-txt);
-  border-radius: var(--r-sm);
-  padding: 7px 9px;
-  font-size: 11px;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  outline: none;
+.cd-clear-btn{
+  background:none;border:1.5px solid var(--border);color:var(--ink3);
+  border-radius:var(--r-sm);padding:8px 10px;font-size:12px;font-weight:700;
+  font-family:var(--font-sans);cursor:pointer;
 }
-
-.voice-sel:focus { border-color: var(--blue); }
-
-.main-panel {
-  margin-left: var(--sb-w);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+.home-progress-bar{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:16px 20px;margin-bottom:16px;
 }
-
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  height: 56px;
-  background: rgba(245, 243, 238, 0.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 18px;
-  flex-shrink: 0;
+.hpb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.hpb-title{font-size:13px;font-weight:700;color:var(--ink)}
+.hpb-pct{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--blue)}
+.hpb-track{background:var(--paper3);border-radius:99px;height:10px;overflow:hidden;margin-bottom:8px;position:relative}
+.hpb-fill{height:10px;border-radius:99px;background:linear-gradient(90deg,var(--blue) 0%,#22D3EE 100%);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.hpb-labels{display:flex;justify-content:space-between;align-items:center}
+.hpb-done{font-size:12px;color:var(--ink3);font-weight:600}
+.hpb-goal{font-size:11px;color:var(--ghost);font-weight:600}
+.hpb-sections{display:flex;gap:4px;margin-top:10px;flex-wrap:nowrap;overflow:hidden;border-radius:6px}
+.hpb-sec{height:6px;border-radius:2px;flex:1;transition:background .3s}
+.home-sec-card{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);
+  padding:14px 16px;cursor:pointer;transition:border-color .14s,box-shadow .14s;
+  display:flex;align-items:center;gap:12px;
 }
+.home-sec-card:hover{border-color:var(--blue);box-shadow:0 3px 14px rgba(37,99,235,.09)}
+.hsc-accent{width:4px;height:100%;min-height:40px;border-radius:2px;flex-shrink:0;background:var(--c,var(--blue))}
+.hsc-ico{font-size:18px;flex-shrink:0}
+.hsc-info{flex:1}
+.hsc-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.25}
+.hsc-desc{font-size:12px;color:var(--ink3);line-height:1.4}
+.hsc-chips{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.chip{font-size:10px;color:var(--ink3);background:var(--paper2);border:1px solid var(--border);padding:2px 7px;border-radius:5px;font-weight:600}
+.hsc-prog{margin-top:6px}
+.hsc-prog-row{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:3px;font-weight:600}
+.hsc-arrow{color:var(--ghost);font-size:20px;flex-shrink:0}
 
-.tb-ham { display: none; background: none; border: none; color: var(--ink3); font-size: 20px; cursor: pointer; padding: 6px; border-radius: 6px; }
-.tb-title { font-size: 14px; font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
-.tb-tabs { display: flex; gap: 4px; flex-shrink: 0; }
-.tbt {
-  padding: 6px 12px;
-  border-radius: var(--r-sm);
-  border: 1.5px solid var(--border);
-  background: var(--card);
-  color: var(--ink3);
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
-  font-family: var(--font-sans);
-  white-space: nowrap;
-  transition: all 0.12s;
+/* ── SUBSECTION LIST VIEW ── */
+.sec-view-header{margin-bottom:20px}
+.bc{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ink3);cursor:pointer;padding:2px 0;margin-bottom:8px;font-weight:600;transition:color .12s}
+.bc:hover{color:var(--blue)}
+.sec-view-h2{font-family:var(--font-serif);font-size:20px;font-weight:700;color:var(--ink);line-height:1.22;margin-bottom:4px}
+.sec-view-desc{font-size:13px;color:var(--ink3);line-height:1.55}
+
+.sub-list{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+.sub-item{
+  background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);
+  cursor:pointer;overflow:hidden;transition:border-color .13s,box-shadow .13s;
 }
+.sub-item:hover{border-color:var(--blue);box-shadow:0 2px 10px rgba(37,99,235,.08)}
+.sub-item-inner{display:flex;align-items:center;gap:12px;padding:13px 15px}
+.sub-num{width:30px;height:30px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--ink3);flex-shrink:0;font-family:var(--font-serif);transition:all .13s}
+.sub-item:hover .sub-num{background:var(--blue-lt);border-color:var(--blue);color:var(--blue)}
+.sub-num.done{background:var(--green-lt);border-color:var(--green);color:var(--green)}
+.sub-meta{flex:1;min-width:0}
+.sub-title{font-size:13.5px;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.3}
+.sub-pills{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dur-pill{display:inline-flex;align-items:center;gap:3px;background:var(--paper2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--ink3);font-weight:600}
+.qz-pill{display:inline-flex;align-items:center;gap:3px;background:var(--blue-lt);border:1px solid var(--blue-md);border-radius:5px;padding:2px 7px;font-size:10px;color:var(--blue);font-weight:700}
+.qz-pill.done{background:var(--green-lt);border-color:var(--green);color:var(--green)}
+.qz-score-pill{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px}
+.sub-arrow{color:var(--ghost);font-size:18px;flex-shrink:0}
 
-.tbt:hover { border-color: var(--blue); color: var(--blue); }
-.tbt.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+.sec-footer-btns{display:flex;gap:8px;flex-wrap:wrap}
 
-.content-area { flex: 1; padding: 28px 32px 60px; max-width: 760px; }
-
-.btn {
-  padding: 10px 18px;
-  border-radius: var(--r-sm);
-  border: none;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: var(--font-sans);
-  cursor: pointer;
-  min-height: 42px;
-  transition: all 0.12s;
-  letter-spacing: 0.02em;
+/* ── AUDIO PLAYER (sticky) ── */
+.ap{
+  position:sticky;top:56px;z-index:150;
+  background:rgba(245,243,238,.97);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1.5px solid var(--border);
+  margin:0 -32px 20px;padding:10px 32px 12px;
+  box-shadow:0 2px 10px rgba(26,28,36,.06);
 }
+.ap-segs{display:flex;gap:3px;margin-bottom:7px}
+.ap-seg{height:4px;border-radius:2px;background:var(--paper3);cursor:pointer;transition:background .17s;position:relative;flex:1;min-width:4px}
+.ap-seg:hover{background:var(--blue-md)}
+.ap-seg.s-done{background:var(--blue-md)}
+.ap-seg.s-active{background:var(--blue)}
+.ap-seg-tip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:10px;padding:4px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .14s;z-index:10;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.ap-seg:hover .ap-seg-tip{opacity:1}
+.ap-scrub{position:relative;height:4px;background:var(--paper3);border-radius:99px;cursor:pointer;margin-bottom:10px;padding:8px 0;margin-top:-8px;background-clip:content-box}
+.ap-fill{position:absolute;top:8px;left:0;height:4px;background:var(--blue);border-radius:99px;pointer-events:none;transition:width .12s linear}
+.ap-thumb{position:absolute;top:50%;width:13px;height:13px;background:var(--card);border:2.5px solid var(--blue);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;transition:left .12s linear;box-shadow:0 1px 4px rgba(37,99,235,.22)}
+.ap-controls{display:flex;align-items:center;justify-content:center;gap:10px}
+.ap-ibtn{background:var(--paper2);border:1.5px solid var(--border);border-radius:50%;cursor:pointer;color:var(--ink2);display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+.ap-ibtn:hover{background:var(--paper3);border-color:var(--blue);color:var(--blue)}
+.ap-ibtn.sm{width:36px;height:36px;font-size:13px}
+.ap-ibtn.lg{width:48px;height:48px;background:var(--blue);border-color:var(--blue);color:#fff;font-size:19px;box-shadow:0 2px 10px rgba(37,99,235,.3)}
+.ap-ibtn.lg:hover{background:#1d4fd7}
+.ap-ibtn.lg.playing{animation:pulse 1.9s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.28)}50%{box-shadow:0 0 0 8px rgba(37,99,235,0)}}
+.ap-grp{display:flex;flex-direction:column;align-items:center;gap:2px}
+.ap-skip-lbl{font-size:9px;color:var(--ghost);font-weight:700;letter-spacing:.04em}
+.ap-time{font-size:12px;color:var(--ink3);min-width:88px;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+.ap-spd{background:var(--paper2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:5px 9px;font-size:11px;font-weight:700;color:var(--ink3);cursor:pointer;transition:all .12s;letter-spacing:.04em}
+.ap-spd:hover{border-color:var(--blue);color:var(--blue)}
+.ap-now{margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.ap-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0;display:none;animation:blink 1.4s ease-in-out infinite}
+.ap-dot.show{display:block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.ap-now-txt{font-size:12px;color:var(--ink3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
 
-.btn-p { background: var(--blue); color: #fff; }
-.btn-p:hover { background: #1d4fd7; }
-.btn-s { background: var(--card); border: 1.5px solid var(--border); color: var(--ink2); }
-.btn-s:hover { border-color: var(--blue); color: var(--blue); }
-.btn-sm { padding: 7px 14px; font-size: 12px; min-height: 36px; }
+/* Sub tabs */
+.sub-tabs-row{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px}
+.sub-tabs-row::-webkit-scrollbar{display:none}
+.sub-tabs{display:flex;gap:5px;min-width:max-content}
+.sub-tab{padding:6px 13px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--card);color:var(--ink3);cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font-sans);white-space:nowrap;transition:all .12s;letter-spacing:.03em}
+.sub-tab:hover{border-color:var(--blue);color:var(--blue)}
+.sub-tab.on{background:var(--blue);border-color:var(--blue);color:#fff}
 
-.ov { display: none; position: fixed; inset: 0; background: rgba(26, 28, 36, 0.45); backdrop-filter: blur(3px); z-index: 290; }
-.ov.show { display: block; }
+/* ── LESSON TEXT ── */
+.lesson-wrap{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:24px 22px 20px;margin-bottom:14px}
+.lesson-h3{font-family:var(--font-serif);font-size:18px;font-weight:700;color:var(--ink);margin-bottom:14px;padding-bottom:12px;border-bottom:1.5px solid var(--border);line-height:1.28}
+.lesson-para{margin-bottom:14px;font-size:var(--fs);line-height:var(--lh);color:var(--ink2)}
+.lesson-para:last-child{margin-bottom:0}
 
-@media(max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.mobile-open { transform: translateX(0); }
-  .main-panel { margin-left: 0; }
-  .tb-ham { display: flex; align-items: center; justify-content: center; }
-  .content-area { padding: 18px 16px 50px; }
+/* Pre-tokenized word spans — highlight = class toggle only, ZERO reflow */
+.w{display:inline;border-radius:3px;padding:1px 0;transition:background .07s,color .07s}
+.w.lit{background:rgba(37,99,235,.16);color:var(--ink);border-radius:3px}
+.w.past{color:var(--ghost)}
+
+/* Key term highlight */
+.kt{background:rgba(37,99,235,.1);border:1px solid var(--blue-md);color:var(--ink2);border-radius:4px;padding:1px 5px;font-weight:700;font-size:.92em}
+.lesson-footer{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;margin-bottom:4px}
+
+/* ── INLINE MINI-QUIZ ── */
+.mini-quiz{
+  margin-top:22px;
+  border-top:2px solid var(--border);
+  padding-top:20px;
 }
+.mq-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.mq-title-wrap{}
+.mq-eyebrow{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:3px}
+.mq-title{font-family:var(--font-serif);font-size:17px;font-weight:700;color:var(--ink)}
+.mq-live{display:flex;align-items:center;gap:7px;background:var(--paper2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:5px 11px;font-size:12px;font-weight:700;flex-shrink:0}
+.mq-c{color:var(--green)} .mq-i{color:var(--red)} .mq-d{color:var(--ink3)}
 
-@media(min-width: 769px) { .ov { display: none !important; } }
+/* Question card */
+.mq-q{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:17px 16px;margin-bottom:10px}
+.mq-qnum{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);margin-bottom:7px}
+.mq-qtxt{font-size:var(--fs);font-weight:600;line-height:var(--lh);color:var(--ink);margin-bottom:15px}
+.mq-opts{display:flex;flex-direction:column;gap:7px}
+.mq-opt{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 13px;background:var(--paper);
+  border:2px solid var(--border);border-radius:var(--r-sm);
+  cursor:pointer;font-size:15px;line-height:1.5;color:var(--ink2);
+  transition:border-color .11s,background .11s;min-height:46px;
+}
+.mq-opt:hover:not(.done){border-color:var(--blue);background:var(--blue-lt);color:var(--ink)}
+.mq-opt.sel{border-color:var(--blue);background:var(--blue-lt);color:var(--ink)}
+.mq-opt.cor{border-color:var(--green);background:var(--green-lt);color:var(--ink)}
+.mq-opt.inc{border-color:var(--red);background:var(--red-lt);color:var(--ink)}
+.mq-opt.rev{border-color:rgba(22,163,74,.4);background:rgba(22,163,74,.04);color:var(--ink)}
+.mq-opt.done{cursor:default}
+.mq-letter{min-width:27px;height:27px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;transition:background .12s,color .12s}
+.cor .mq-letter{background:var(--green);color:#fff}
+.inc .mq-letter{background:var(--red);color:#fff}
+.rev .mq-letter{background:var(--green);color:#fff}
+.sel .mq-letter{background:var(--blue);color:#fff}
+
+.mq-submit{margin-top:11px;padding:11px;border-radius:var(--r-sm);background:var(--blue);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-sans);display:none;width:100%;min-height:44px;transition:background .12s}
+.mq-submit:hover{background:#1d4fd7}
+.mq-submit.show{display:block}
+.mq-exp{margin-top:11px;padding:12px 14px;border-radius:var(--r-sm);font-size:13.5px;line-height:1.7;display:none;color:var(--ink2)}
+.mq-exp.show{display:block}
+.mq-exp.e-c{background:var(--green-lt);border:1.5px solid rgba(22,163,74,.22)}
+.mq-exp.e-i{background:var(--red-lt);border:1.5px solid rgba(220,38,38,.22)}
+.mq-exp-lbl{font-weight:800;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+
+/* Mini-quiz result banner */
+.mq-result{background:var(--card);border:2px solid var(--border);border-radius:var(--r);padding:22px 18px;text-align:center;display:none;margin-top:14px}
+.mq-result.show{display:block}
+.mq-rpct{font-family:var(--font-serif);font-size:60px;font-weight:700;line-height:1;margin-bottom:5px}
+.mq-rmsg{font-size:13.5px;color:var(--ink3);margin-bottom:14px;line-height:1.55}
+.mq-rbreakdown{display:flex;justify-content:center;gap:26px;margin-bottom:16px}
+.mq-rbd .n{font-family:var(--font-serif);font-size:24px;font-weight:700}
+.mq-rbd .l{font-size:10px;color:var(--ink3);font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-top:2px}
+.mq-raction{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+/* ── FLASHCARDS ── */
+.fc-stage{perspective:1400px;margin-bottom:12px}
+.fc-wrap{width:100%;height:clamp(200px,42vw,280px);cursor:pointer;touch-action:manipulation}
+.fc{width:100%;height:100%;position:relative;transform-style:preserve-3d;border-radius:var(--r);transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.fc.flip{transform:rotateY(180deg)}
+.cf{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:26px;text-align:center}
+.cf-front{background:var(--card);border:1.5px solid var(--border)}
+.cf-back{background:var(--blue-lt);border:2px solid var(--blue-md);transform:rotateY(180deg)}
+.cf-eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ghost);margin-bottom:11px;font-weight:700}
+.cf-text{font-size:clamp(14.5px,3.3vw,17.5px);font-weight:600;line-height:1.5;color:var(--ink)}
+.cf-back .cf-text{font-size:clamp(13px,2.9vw,15.5px);line-height:1.75;white-space:pre-line}
+.cf-hint{font-size:11px;color:var(--ghost);margin-top:11px;font-weight:500}
+.fc-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:9px}
+.fc-btn{padding:9px 20px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--card);color:var(--ink2);cursor:pointer;font-size:13.5px;font-weight:600;font-family:var(--font-sans);min-height:42px;transition:all .12s}
+.fc-btn:hover{border-color:var(--blue);color:var(--blue)}
+.fc-btn:disabled{opacity:.33;pointer-events:none}
+.fc-count{font-size:13px;color:var(--ink3);min-width:58px;text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+.fc-rate{display:flex;gap:7px;margin-bottom:12px}
+.fc-rb{flex:1;padding:10px 6px;border-radius:var(--r-sm);border:2px solid;cursor:pointer;font-size:12.5px;font-weight:700;font-family:var(--font-sans);text-align:center;min-height:42px;transition:all .12s}
+.rb-r{background:var(--red-lt);border-color:rgba(220,38,38,.28);color:var(--red)}
+.rb-y{background:var(--amber-lt);border-color:rgba(217,119,6,.28);color:var(--amber)}
+.rb-g{background:var(--green-lt);border-color:rgba(22,163,74,.28);color:var(--green)}
+
+/* ── PROGRESS PAGE ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:16px}
+.stat-val{font-family:var(--font-serif);font-size:34px;font-weight:700;color:var(--blue);line-height:1}
+.stat-lbl{font-size:11px;color:var(--ink3);margin-top:3px;font-weight:600}
+.prog-sec-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:15px;margin-bottom:8px}
+.psi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;gap:8px}
+.psi-name{font-size:13.5px;font-weight:700;color:var(--ink);flex:1}
+.psi-pct{font-family:var(--font-serif);font-size:15px;font-weight:700;flex-shrink:0}
+.psi-acts{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+
+/* ── WRAPPING UP ── */
+.wrap-hero{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:18px;text-align:center}
+.wrap-h2{font-family:var(--font-serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.wrap-p{font-size:14px;color:var(--ink3);line-height:1.65;max-width:500px;margin:0 auto 16px}
+.wrap-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.wrap-stat{background:var(--paper2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:14px;text-align:center}
+.wrap-stat .n{font-family:var(--font-serif);font-size:28px;font-weight:700;color:var(--blue)}
+.wrap-stat .l{font-size:11px;color:var(--ink3);font-weight:600;margin-top:2px}
+.key-concepts{margin-bottom:18px}
+.kc-title{font-family:var(--font-serif);font-size:16px;font-weight:700;color:var(--ink);margin-bottom:12px}
+.kc-list{display:flex;flex-direction:column;gap:6px}
+.kc-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.kc-ico{font-size:15px;flex-shrink:0;margin-top:1px}
+.kc-body{flex:1}
+.kc-term{font-weight:700;font-size:13px;color:var(--ink);margin-bottom:2px}
+.kc-def{font-size:12.5px;color:var(--ink3);line-height:1.55}
+
+/* ── BUTTONS ── */
+.btn{padding:10px 18px;border-radius:var(--r-sm);border:none;font-size:13px;font-weight:700;font-family:var(--font-sans);cursor:pointer;min-height:42px;transition:all .12s;letter-spacing:.02em}
+.btn-p{background:var(--blue);color:#fff} .btn-p:hover{background:#1d4fd7}
+.btn-s{background:var(--card);border:1.5px solid var(--border);color:var(--ink2)} .btn-s:hover{border-color:var(--blue);color:var(--blue)}
+.btn-sm{padding:7px 14px;font-size:12px;min-height:36px}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .main-panel{margin-left:0}
+  .tb-ham{display:flex;align-items:center;justify-content:center}
+  .content-area{padding:18px 16px 50px}
+  .ap{margin:0 -16px 18px;padding:10px 16px 12px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+@media(min-width:769px){.ov{display:none!important}}
+.ov{display:none;position:fixed;inset:0;background:rgba(26,28,36,.45);backdrop-filter:blur(3px);z-index:290}
+.ov.show{display:block}
 </style>
 </head>
 <body class="wsp">
 
+<!-- mobile overlay -->
 <div class="ov" id="ov" onclick="closeSidebar()"></div>
 
 <div class="app">
+<!-- ══════════════ SIDEBAR ══════════════ -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-brand">
     <div class="sb-logo">
@@ -330,7 +511,9 @@ body {
     <div class="sb-prog-row"><span>Progress</span><span id="sb-opct">0%</span></div>
     <div class="prog-track"><div class="prog-fill" id="sb-obar" style="width:0%"></div></div>
   </div>
-  <nav class="sb-nav" id="sb-nav"></nav>
+  <nav class="sb-nav" id="sb-nav">
+    <!-- built by JS -->
+  </nav>
   <div class="sb-foot">
     <div class="sb-foot-label">Reading Options</div>
     <div class="tog-grid">
@@ -347,249 +530,1617 @@ body {
         <option>Loading voices…</option>
       </select>
       <div id="voice-note" style="font-size:10px;margin-top:5px;font-weight:700;letter-spacing:.02em;min-height:14px;"></div>
-      <div style="font-size:10px;color:var(--sb-dim);margin-top:3px;line-height:1.45;">Best quality: use <strong style="color:#93B4FD">Chrome</strong> on desktop or <strong style="color:#93B4FD">Safari</strong> on Mac.</div>
+      <div style="font-size:10px;color:var(--sb-dim);margin-top:3px;line-height:1.45;">Best quality: use <strong style="color:#93B4FD">Chrome</strong> on desktop or <strong style="color:#93B4FD">Safari</strong> on Mac/iPhone</div>
     </div>
   </div>
 </aside>
 
+<!-- ══════════════ MAIN PANEL ══════════════ -->
 <div class="main-panel">
   <div class="topbar">
     <button class="tb-ham" onclick="openSidebar()">☰</button>
     <div class="tb-title" id="tb-title">Series 63 Prep</div>
+    <div class="tb-tabs hidden" id="tb-tabs">
+      <button class="tbt on" onclick="switchTab('learn')" id="tab-l">📖 Learn</button>
+      <button class="tbt" onclick="switchTab('cards')" id="tab-c">🃏 Cards</button>
+    </div>
   </div>
 
   <div class="content-area" id="content-area">
+
+    <!-- HOME -->
     <div id="v-home" class="fa">
-      <h1>Series 63 Study Hub</h1>
-      <p>Welcome! Select a section from the sidebar to begin.</p>
+      <div class="home-hero">
+        <div class="eyebrow">📋 NASAA · Uniform Securities Act</div>
+        <h1 class="hero-h1">Your <em>Series 63</em> Study Hub</h1>
+        <p class="hero-p">Structured exactly like Achievable · Audio read-along · Mini-quiz after each topic · Track your progress</p>
+        <!-- EXAM COUNTDOWN — merged into hero card -->
+        <div class="hero-cd-row">
+          <div>
+            <div class="hero-cd-left">
+              <div class="hero-cd-days-num" id="cd-days">--</div>
+              <div class="hero-cd-days-lbl">Days to Exam</div>
+            </div>
+            <div class="hero-cd-msg" id="cd-subtext">Tap "Set Date" to start your countdown</div>
+          </div>
+          <div class="hero-cd-right">
+            <button class="cd-set-btn" id="cd-set-btn" onclick="cdToggleEdit()">📅 Set Date</button>
+          </div>
+        </div>
+        <div class="hero-cd-input-row" id="cd-input-wrap">
+          <input type="date" class="cd-date-in" id="cd-date-input" />
+          <button class="cd-save-btn" onclick="cdSaveDate()">Save</button>
+          <button class="cd-clear-btn" onclick="cdClearDate()">Clear</button>
+        </div>
+      </div>
+
+      <!-- OVERALL PROGRESS BAR -->
+      <div class="home-progress-bar" id="home-prog-bar">
+        <div class="hpb-header">
+          <div class="hpb-title">📊 Your Overall Progress</div>
+          <div class="hpb-pct" id="hpb-pct">0%</div>
+        </div>
+        <div class="hpb-track">
+          <div class="hpb-fill" id="hpb-fill" style="width:0%"></div>
+        </div>
+        <div class="hpb-labels">
+          <div class="hpb-done" id="hpb-done">0 of 0 topics completed</div>
+          <div class="hpb-goal">Goal: Complete all topics</div>
+        </div>
+        <!-- per-section mini segments -->
+        <div class="hpb-sections" id="hpb-sections"></div>
+      </div>
+      <div class="home-sections" id="home-sections"></div>
     </div>
-  </div>
-</div>
-</div>
+
+    <!-- SECTION VIEW -->
+    <div id="v-section" class="hidden fa">
+      <div class="sec-view-header">
+        <div class="bc" onclick="goHome()">← Home</div>
+        <div class="sec-view-h2" id="sv-title"></div>
+        <div class="sec-view-desc" id="sv-desc"></div>
+      </div>
+      <!-- LEARN TAB -->
+      <div id="tc-learn">
+        <div id="sub-list-view">
+          <div class="sub-list" id="sub-list"></div>
+          <div class="sec-footer-btns">
+            <button class="btn btn-s btn-sm" onclick="switchTab('cards')">🃏 Flashcards</button>
+          </div>
+        </div>
+        <div id="sub-detail-view" class="hidden">
+          <!-- Audio player -->
+          <div class="ap" id="ap">
+            <div class="ap-segs" id="ap-segs"></div>
+            <div class="ap-scrub" id="ap-scrub" onmousedown="scrubStart(event)" ontouchstart="scrubTouchStart(event)">
+              <div class="ap-fill" id="ap-fill" style="width:0%"></div>
+              <div class="ap-thumb" id="ap-thumb" style="left:0%"></div>
+            </div>
+            <div class="ap-controls">
+              <div class="ap-grp">
+                <button class="ap-ibtn sm" onclick="apSkip(-15)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>
+                </button>
+                <span class="ap-skip-lbl">−15s</span>
+              </div>
+              <button class="ap-ibtn lg" id="ap-play" onclick="apToggle()">
+                <svg id="ap-ico" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+              </button>
+              <div class="ap-grp">
+                <button class="ap-ibtn sm" onclick="apSkip(15)">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3"/></svg>
+                </button>
+                <span class="ap-skip-lbl">+15s</span>
+              </div>
+              <span class="ap-time" id="ap-time">0:00 / 0:00</span>
+              <button class="ap-spd" id="ap-spd" onclick="cycleSpeed()">1×</button>
+            </div>
+            <div class="ap-now">
+              <div class="ap-dot" id="ap-dot"></div>
+              <div class="ap-now-txt" id="ap-now">Tap ▶ to hear this lesson read aloud</div>
+            </div>
+          </div>
+          <!-- Sub-tab strip -->
+          <div class="sub-tabs-row"><div class="sub-tabs" id="sub-tabs"></div></div>
+          <!-- Lesson + inline quiz -->
+          <div id="lesson-area"></div>
+          <div class="lesson-footer" style="margin-top:8px">
+            <button class="btn btn-s btn-sm" onclick="backToList()">← All Topics</button>
+            <button class="btn btn-s btn-sm" id="btn-next-sub" onclick="nextSub()">Next Topic →</button>
+          </div>
+        </div>
+      </div>
+      <!-- CARDS TAB -->
+      <div id="tc-cards" class="hidden">
+        <div class="fc-stage">
+          <div class="fc-wrap" onclick="flipCard()">
+            <div class="fc" id="fc">
+              <div class="cf cf-front">
+                <div class="cf-eyebrow">Term / Concept</div>
+                <div class="cf-text" id="cf-f">—</div>
+                <div class="cf-hint">Tap to reveal answer</div>
+              </div>
+              <div class="cf cf-back">
+                <div class="cf-eyebrow">Definition / Answer</div>
+                <div class="cf-text" id="cf-b">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-rate" id="fc-rate" style="display:none">
+          <button class="fc-rb rb-r" onclick="rateCard()">🔴 Again</button>
+          <button class="fc-rb rb-y" onclick="rateCard()">🟡 Hard</button>
+          <button class="fc-rb rb-g" onclick="rateCard()">🟢 Got it</button>
+        </div>
+        <div class="fc-nav">
+          <button class="fc-btn" id="fc-prev" onclick="prevCard()">← Prev</button>
+          <span class="fc-count" id="fc-cnt">1/1</span>
+          <button class="fc-btn" id="fc-next" onclick="nextCard()">Next →</button>
+        </div>
+        <div style="text-align:center;margin-bottom:14px"><button class="btn btn-s btn-sm" onclick="shuffleCards()">🔀 Shuffle</button></div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="v-prog" class="hidden fa">
+      <h2 style="font-family:var(--font-serif);font-size:21px;font-weight:700;margin-bottom:18px;color:var(--ink)">My Progress</h2>
+      <div class="stat-grid" id="prog-stats"></div>
+      <h3 style="font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ghost);margin-bottom:10px">Section Scores</h3>
+      <div id="prog-list"></div>
+    </div>
+
+    <!-- WRAPPING UP -->
+    <div id="v-wrap" class="hidden fa">
+      <div class="wrap-hero">
+        <h2 class="wrap-h2">🎓 Wrapping Up</h2>
+        <p class="wrap-p">You've covered all the material. Here's a summary of the key concepts to keep sharp before exam day.</p>
+        <div class="wrap-stats" id="wrap-stats"></div>
+        <button class="btn btn-p" onclick="showProg()">📊 View My Full Progress</button>
+      </div>
+      <div class="key-concepts">
+        <div class="kc-title">🔑 Must-Know Concepts for Exam Day</div>
+        <div class="kc-list" id="kc-list"></div>
+      </div>
+    </div>
+
+  </div><!-- end content-area -->
+</div><!-- end main-panel -->
+</div><!-- end app -->
 
 <script>
-// ===== STATE MANAGEMENT =====
-const STATE = {
-  currentView: 'home',
-  currentSection: null,
-  currentSub: null,
-  fontSize: 'normal',
-  dyslexic: false,
-  wideSpacing: true,
-  highContrast: false,
-  currentAudioSpeed: 1,
-  progress: {}
-};
+/* ═══════════════════════════════════════════════════════════
+   CONTENT DATABASE
+   Structure: Introduction → 1.Definitions → 2.Registration
+              → 3.Enforcement → 4.Ethics → Wrapping Up
+═══════════════════════════════════════════════════════════ */
+const TREE = [
+{
+  id:'intro', label:'Introduction', icon:'📖', col:'#6B7280', isFlat:true,
+  desc:'What the Series 63 exam covers and how to use this guide.',
+  subs:[{
+    id:'intro-1', num:'', title:'What is the Series 63?',
+    paragraphs:[
+      "The Series 63 — officially the Uniform Securities Agent State Law Exam — is required in most states before you can work as a securities agent. It is administered by FINRA but written by NASAA, the North American Securities Administrators Association.",
+      "The exam has 60 scored questions plus 5 unscored pilot questions, for 65 total. You have 75 minutes. Passing score is 43 out of 60, which is 72 percent.",
+      "The exam tests your knowledge of the Uniform Securities Act — a model law that most states have adopted in some form. It covers four main areas: Definitions, Registration of Persons and Securities, Enforcement and Remedies, and Ethical Practices.",
+      "This guide follows the same structure used by Achievable's Series 63 course. Work through each section in order, use the audio to listen while you read, and take the mini-quiz at the end of each topic to lock in what you've learned."
+    ],
+    quiz:[
+      {q:"How many scored questions are on the Series 63 exam?",opts:["50","60","65","75"],cor:1,exp:"The exam has 60 scored questions plus 5 unscored pilot questions (65 total). Your score is based only on the 60 scored questions."},
+      {q:"What is the passing score for the Series 63?",opts:["70% (42/60)","72% (43/60)","75% (45/60)","80% (48/60)"],cor:1,exp:"You need 43 correct out of 60 scored questions — 72% — to pass."},
+      {q:"Who writes the Series 63 exam?",opts:["FINRA","The SEC","NASAA","Each individual state"],cor:2,exp:"NASAA (North American Securities Administrators Association) writes the Series 63. FINRA administers it."},
+      {q:"The Uniform Securities Act is BEST described as:",opts:["A federal law enforced by the SEC","A model state law that most states have adopted","A FINRA rule requiring state registration","An international securities treaty"],cor:1,exp:"The Uniform Securities Act is a model law — a template — that most states have adopted in whole or in part. It governs state-level securities regulation."}
+    ]
+  }],
+  cards:[
+    {f:"What is the Series 63?",b:"State securities agent exam (65 questions / 75 min). 60 scored questions, 5 pilot. Pass = 43/60 (72%). Written by NASAA, administered by FINRA."},
+    {f:"Who writes the Series 63 exam?",b:"NASAA — North American Securities Administrators Association. FINRA administers it."},
+    {f:"What does the Series 63 test?",b:"Knowledge of the Uniform Securities Act: (1) Definitions, (2) Registration of Persons & Securities, (3) Enforcement & Remedies, (4) Ethical Practices."}
+  ]
+},
+{
+  id:'definitions', label:'1. Definitions', icon:'📚', col:'#7C3AED',
+  desc:'Core terms: persons, issuers, securities, offers, and the key roles under the USA.',
+  subs:[
+    {
+      id:'def-1', num:'1.1', title:'Persons',
+      paragraphs:[
+        "Under the Uniform Securities Act, a person is any individual, corporation, partnership, association, joint-stock company, trust, or unincorporated organization. In short: almost anything with legal existence is a person.",
+        "This broad definition matters because the USA's registration, fraud, and enforcement provisions all apply to persons. If you can ask 'who did this?' and the answer could be a company or an individual, the USA likely applies.",
+        "A minor — someone under 18 — can be a person under the USA but generally cannot enter binding securities transactions. Governments and political subdivisions are specifically excluded from the definition of person."
+      ],
+      quiz:[
+        {q:"Which of the following is NOT a 'person' under the Uniform Securities Act?",opts:["A limited partnership","A corporation","A state government","An unincorporated association"],cor:2,exp:"Governments and political subdivisions are specifically excluded from the USA's definition of 'person.' All the others qualify."},
+        {q:"Why does the broad definition of 'person' matter for the USA?",opts:["It determines who can vote on securities regulations","It defines who the registration, fraud, and enforcement rules apply to","It sets the minimum age for trading securities","It limits who can serve as an Administrator"],cor:1,exp:"The broad definition ensures the USA's registration, fraud, and enforcement provisions cover all types of entities — not just individuals."},
+        {q:"A partnership sells unregistered securities. Under the USA, which is true?",opts:["Only the individual partners are liable — not the entity","The partnership is a person and can be subject to USA enforcement","Partnerships are exempt from the USA's definition of person","Only publicly traded entities are persons under the USA"],cor:1,exp:"A partnership is a person under the USA, so it can be registered, charged with violations, and held liable under the Act's provisions."},
+        {q:"Which entity IS included in the USA's definition of 'person'?",opts:["A county government","A federal agency","A privately held corporation","A foreign national government"],cor:2,exp:"Private corporations are persons. Governments and political subdivisions at all levels are excluded from the definition."}
+      ]
+    },
+    {
+      id:'def-2', num:'1.2', title:'Exempt & Excluded',
+      paragraphs:[
+        "Two words that look similar but have critical legal differences: exempt and excluded.",
+        "Excluded means you fall outside the definition entirely. An excluded person is never covered by that definition — they cannot register under it even voluntarily. Example: a bank is excluded from the broker-dealer definition. It is simply not a BD.",
+        "Exempt means you fit the definition but are not required to register or comply with that specific requirement. An exempt person can choose to register voluntarily. Example: a private placement transaction is exempt from registration — the securities still exist under the Act, but registration is not required for that transaction.",
+        "Think of it this way: excluded is a carve-out from the definition itself. Exempt is a carve-out from a requirement. This distinction shows up constantly on the exam — get it right and you'll answer several questions correctly every time."
+      ],
+      quiz:[
+        {q:"An out-of-state BD has no office in a state and 4 retail clients there. This BD is:",opts:["Exempt from registration in that state","Excluded from the BD definition in that state","Required to register because it has any retail clients","Exempt only if it files a notice with the Administrator"],cor:1,exp:"A BD with no office and 5 or fewer non-institutional clients in a state is EXCLUDED from the BD definition there — not just exempt. It falls outside the definition entirely."},
+        {q:"Which statement BEST distinguishes 'excluded' from 'exempt'?",opts:["Excluded persons can register voluntarily; exempt persons cannot","Exempt means outside the definition; excluded means exempted from a requirement","Excluded means outside the definition; exempt means covered but not required to comply","There is no meaningful legal difference between the two terms"],cor:2,exp:"Excluded = outside the definition entirely (cannot register voluntarily). Exempt = fits the definition but a specific requirement does not apply (can still register voluntarily)."},
+        {q:"A CPA gives incidental securities advice and receives no special compensation. The CPA is:",opts:["Exempt from IA registration — may still register voluntarily","Excluded from the IA definition — cannot register as an IA","Required to register as an IA regardless","A broker-dealer under the USA"],cor:1,exp:"The CPA is EXCLUDED from the IA definition. Excluded persons fall outside the definition entirely and cannot register under it voluntarily."},
+        {q:"A private placement is sold to 8 retail investors in 12 months. This transaction is:",opts:["Excluded from the securities definition","Exempt from registration — the securities are still subject to anti-fraud rules","Fully registered because retail investors are involved","Excluded from the USA entirely"],cor:1,exp:"A private placement to 10 or fewer retail investors is an EXEMPT transaction — not excluded. Anti-fraud rules still apply. The securities exist under the Act; only the registration requirement is waived."}
+      ]
+    },
+    {
+      id:'def-3', num:'1.3', title:'Issuers & Securities',
+      paragraphs:[
+        "An issuer is any person who issues or proposes to issue a security. When Apple sells stock, Apple is the issuer. When a city sells municipal bonds, the city is the issuer.",
+        "A security is broadly defined and includes stocks, bonds, notes, debentures, options, certificates of interest, investment contracts, and many other instruments. The key test for whether something is a security is the Howey Test: is there an investment of money in a common enterprise with an expectation of profits primarily from the efforts of others?",
+        "Not everything is a security. Fixed annuities, insurance policies, collectibles, and currencies are generally not securities. Variable annuities, however, ARE securities because the investor bears investment risk through a separate account.",
+        "Exempt securities are those that do not require state registration: U.S. government securities, municipal bonds, bank-issued securities, exchange-listed securities (federal covered), nonprofit organization securities, and short-term commercial paper (maturity under 9 months)."
+      ],
+      quiz:[
+        {q:"Under the Howey Test, which is the MOST important factor in determining if something is a security?",opts:["The investment must be in cash only","The investor expects profits primarily from others' efforts","The investment must be publicly traded","The instrument must be registered with the SEC"],cor:1,exp:"The Howey Test: investment of money in a common enterprise with expectation of profits from others' efforts. The last element — reliance on others — is the most distinguishing factor."},
+        {q:"Which of the following is NOT a security under the USA?",opts:["A variable annuity","A fixed annuity","A convertible corporate bond","An investment contract in a real estate fund"],cor:1,exp:"Fixed annuities are insurance products — not securities — because the insurer bears the investment risk. Variable annuities ARE securities because the investor bears risk through the separate account."},
+        {q:"Commercial paper with a 7-month maturity is:",opts:["A security that must be registered with the state","An exempt security — no state registration required","A federal covered security regulated only by the SEC","Not a security under the USA"],cor:1,exp:"Commercial paper, bankers' acceptances, and similar instruments with maturities under 9 months are exempt securities. Anti-fraud rules still apply."},
+        {q:"A city issues bonds to fund a new school. The city is BEST described as:",opts:["A broker-dealer","A federal covered issuer","An issuer — municipal bonds are exempt securities","An investment adviser"],cor:2,exp:"The city is an issuer. Municipal bonds (state and local government securities) are exempt securities under the USA — no state registration required, but anti-fraud rules apply."},
+        {q:"Which securities are 'federal covered' and exempt from state registration?",opts:["All bonds with investment-grade ratings","Securities listed on a national exchange like the NYSE or NASDAQ","Securities issued by any public company","All mutual fund shares regardless of listing"],cor:1,exp:"Federal covered securities include those listed on national exchanges (NYSE, NASDAQ, etc.) and certain investment company shares. They are regulated federally and exempt from state registration requirements."}
+      ]
+    },
+    {
+      id:'def-4', num:'1.4', title:'Broker-Dealers',
+      paragraphs:[
+        "A broker-dealer is any person in the business of buying or selling securities for its own account or for others. Key word: business. An occasional trade does not make you a BD — it must be a regular commercial activity.",
+        "Excluded from the BD definition: issuers selling their own securities, banks and savings institutions, trust companies, and out-of-state BDs with no office in the state and five or fewer non-institutional clients in the past 12 months.",
+        "Broker-dealers must register in each state where they have a place of business or conduct business with clients. Registration becomes effective at noon on the 30th day after filing a complete application, unless the Administrator acts sooner.",
+        "All BD registrations expire on December 31 each year and must be renewed. If a BD wants to stop operating, it files a withdrawal — this takes effect 30 days after filing unless a proceeding is pending."
+      ],
+      quiz:[
+        {q:"Which entity is EXCLUDED from the broker-dealer definition?",opts:["A firm executing trades for institutional investors","A bank selling U.S. Treasury bonds","A discount brokerage with online retail accounts","A firm buying securities for its own inventory"],cor:1,exp:"Banks and savings institutions are explicitly excluded from the BD definition, regardless of their securities activities."},
+        {q:"A BD files a complete registration application on June 1. The Administrator takes no action. Registration becomes effective on:",opts:["June 1 immediately","June 15 at noon","July 1 at noon","July 31 at midnight"],cor:2,exp:"BD registration becomes effective at NOON on the 30th day after filing. 30 days from June 1 = July 1 at noon."},
+        {q:"An out-of-state BD has no office in State X and 5 non-institutional clients there over 12 months. The BD is:",opts:["Required to register in State X","Excluded from the BD definition in State X","Exempt but must file a notice with State X","Required to register only if clients total exceeds $1 million"],cor:1,exp:"The out-of-state BD exclusion applies to BDs with no office AND 5 or fewer non-institutional clients in 12 months. With exactly 5 clients, the BD is excluded from the BD definition."},
+        {q:"A BD registration expires:",opts:["After 2 years unless renewed","On December 31 each year","When the BD withdraws from a state","Only when the Administrator revokes it"],cor:1,exp:"All BD (and all other securities) registrations expire on December 31 each year and must be annually renewed."}
+      ]
+    },
+    {
+      id:'def-5', num:'1.5', title:'Agents',
+      paragraphs:[
+        "An agent is an individual (a human being) who represents a broker-dealer or an issuer in the purchase or sale of securities. Agents register separately from their BD.",
+        "Individuals representing an issuer are only agents if the transaction is not exempt. If the transaction is exempt under the USA, the person representing the issuer in that transaction is not an agent and does not need to register as one.",
+        "When an agent leaves a BD, both the agent and the BD must promptly notify the Administrator. The agent's registration is suspended until they register with a new BD.",
+        "Clerical or ministerial employees of a BD who do not involve themselves in securities transactions — like a receptionist — are not agents."
+      ],
+      quiz:[
+        {q:"Which person is NOT an agent under the USA?",opts:["A registered rep at a full-service brokerage soliciting trades","An individual representing an issuer in a transaction exempt under Section 402(b)","An individual helping a BD sell municipal bonds to retail clients","A person at a BD recommending mutual funds to customers"],cor:1,exp:"A person representing an issuer in an exempt transaction is specifically excluded from the agent definition. No agent registration is required for that role in that transaction."},
+        {q:"When an agent terminates employment at a BD, what must happen?",opts:["Only the agent must notify the Administrator","Only the BD must notify the Administrator","Both the agent and the BD must promptly notify the Administrator","No notification is required — registration transfers automatically"],cor:2,exp:"Both the agent AND the BD must promptly notify the Administrator upon termination. The agent's registration is then suspended until they affiliate with a new registered BD."},
+        {q:"A receptionist at a BD occasionally answers the phone and takes messages for agents. The receptionist is:",opts:["An agent because they work at a BD","An agent if they receive any commission","Not an agent — clerical/ministerial employees are excluded","An investment adviser representative"],cor:2,exp:"Clerical and ministerial employees who do not participate in securities transactions are not agents and do not need to register as such."},
+        {q:"Agent registrations are:",opts:["Transferable between BDs without any filing","Permanent once granted — no renewal needed","Non-transferable — a new registration is required when changing BDs","Automatically renewed by the state each January"],cor:2,exp:"Agent registrations do not transfer between BDs. When changing firms, the agent must file a new registration application with the new BD before conducting securities business."}
+      ]
+    },
+    {
+      id:'def-6', num:'1.6', title:'Investment Advisers',
+      paragraphs:[
+        "An investment adviser is any person who, for compensation, provides advice about securities as part of a regular business. The three-prong test: (1) advice about securities, (2) as a regular business, (3) for compensation. All three must be present.",
+        "Excluded from the IA definition: broker-dealers whose advice is incidental to their business with no special compensation; lawyers, CPAs, teachers, and engineers whose advice is incidental to their profession; publishers of general-circulation financial publications; and federal covered advisers (registered with the SEC).",
+        "State-registered IAs: under $100M AUM. SEC-registered (federal covered advisers): over $110M AUM. The $100M-$110M window allows either. The threshold matters because federal covered advisers are exempt from state IA registration — they only file a notice with the state.",
+        "Investment advisers owe a fiduciary duty to clients — the highest legal standard. This means always acting in the client's best interest and disclosing all material conflicts of interest."
+      ],
+      quiz:[
+        {q:"Which person qualifies as an investment adviser under the USA?",opts:["A CPA who occasionally mentions bond strategies during tax prep with no extra charge","A financial planning firm charging $5,000/year for portfolio management advice","A general circulation newsletter giving broad economic commentary","A BD whose reps give incidental advice while executing trades"],cor:1,exp:"A financial planning firm that charges for portfolio advice meets all three prongs: (1) advice about securities, (2) regular business, (3) compensation. The others fail at least one prong."},
+        {q:"An IA has $85M AUM. It must register with:",opts:["The SEC only","The state only","Either the SEC or the state — its choice","Both the SEC and the state simultaneously"],cor:1,exp:"IAs under $100M must register with the state. The $100M-$110M window allows choice. Over $110M requires SEC registration."},
+        {q:"A publisher releases a weekly paid newsletter with broad market commentary to 200,000 subscribers. The publisher is:",opts:["An investment adviser — advice for compensation","Excluded from the IA definition — general circulation publication","Exempt from IA registration but must file with states","A broker-dealer because it solicits the general public"],cor:1,exp:"Publishers of bona fide, general-circulation financial publications are excluded from the IA definition, even if they charge a subscription fee."},
+        {q:"The fiduciary duty owed by an IA to clients means:",opts:["The IA must guarantee no losses","The IA must always act in the client's best interest and disclose material conflicts","The IA must be licensed in every state the client has assets","The IA must charge the lowest possible fee"],cor:1,exp:"Fiduciary duty = acting in the client's best interest at all times and disclosing all material conflicts of interest. It does not guarantee returns or require any specific fee level."}
+      ]
+    },
+    {
+      id:'def-7', num:'1.7', title:'Investment Adviser Representatives',
+      paragraphs:[
+        "Investment adviser representatives, or IARs, are the individuals (human beings) who work for investment advisers — doing advisory work, managing accounts, or soliciting clients. They register separately from the IA firm.",
+        "IARs must register in any state where the IA has a place of business, or where the IAR has more than 5 clients. An IAR at a federal covered adviser is exempt from state registration.",
+        "The distinction between IA and IAR is just like BD vs. agent: the firm registers as an IA, but the people doing the work register as IARs."
+      ],
+      quiz:[
+        {q:"An IAR works for a state-registered IA and has a place of business in State X. The IAR must register with:",opts:["Only the SEC","Only State X","Both the SEC and State X","No registration required if the IA is already registered"],cor:1,exp:"IARs register in each state where the IA has a place of business or where the IAR has more than 5 clients. Since the IA is state-registered (not federal covered), the IAR must register in State X."},
+        {q:"An IAR works for a federal covered adviser. Regarding state registration, the IAR is:",opts:["Required to register in every state where clients reside","Exempt from state IAR registration requirements","Required to register in states where the IAR has an office","Required to register in the adviser's home state only"],cor:1,exp:"IARs of federal covered advisers are exempt from state registration. The federal covered adviser files a notice with states but the IARs do not individually register at the state level."},
+        {q:"Which BEST describes the IA vs. IAR registration structure?",opts:["The IA registers with FINRA; the IAR registers with the state","The firm registers as the IA; the individuals doing the advisory work register as IARs","Only the IA registers — IARs are covered under the firm's registration","IARs register federally; IAs register with states"],cor:1,exp:"Just like BD (firm) vs. agent (individual), the IA is the entity that registers as the firm, and IARs are the individuals who register separately to do the advisory work."},
+        {q:"An IAR has a place of business in State A and 3 clients in State B (where the IA has no office). Where must the IAR register?",opts:["State A only","State B only","Both State A and State B","Neither — 3 clients is below the threshold"],cor:0,exp:"IARs must register in states where the IA has a place of business (State A), OR where the IAR personally has more than 5 clients. With only 3 clients in State B and no office there, registration in State B is not required. State A registration is required."}
+      ]
+    },
+    {
+      id:'def-8', num:'1.8', title:'State Administrator',
+      paragraphs:[
+        "The Administrator is the state official designated to enforce the Uniform Securities Act. Each state has one. The title varies — Securities Commissioner, Director of Securities, Secretary of State — but the role is the same.",
+        "The Administrator's powers include: making rules and orders, issuing subpoenas, conducting investigations, requiring books and records from registrants, and cooperating with other state and federal regulators.",
+        "The Administrator cannot act arbitrarily. Denial, suspension, or revocation of registration requires written notice of the grounds and an opportunity for a hearing. Summary suspension — without prior notice — is allowed only in emergencies to protect the public, but a hearing must be offered promptly after.",
+        "Important: the Administrator cannot deny registration solely because someone lacks experience or training. There must be dishonest, unethical, or unlawful conduct."
+      ],
+      quiz:[
+        {q:"Which power does the Administrator NOT have?",opts:["Issuing subpoenas to compel testimony","Making rules to carry out the USA","Denying registration for lack of experience alone","Conducting securities investigations"],cor:2,exp:"The Administrator cannot deny registration solely for lack of experience or training. There must be grounds involving dishonest, unethical, or unlawful conduct."},
+        {q:"The Administrator issues a summary suspension of a BD's registration without prior notice. This is:",opts:["Always illegal — prior notice is always required","Legal in emergencies to protect the public — but a hearing must be offered promptly after","Legal only with court approval","Legal if the BD has had prior violations"],cor:1,exp:"Summary suspension is permitted in emergencies. Due process still requires that the registrant be offered a hearing promptly after the suspension — not before, given the emergency."},
+        {q:"Before the Administrator can formally revoke a registration, what is required?",opts:["A court order authorizing revocation","Written notice of the grounds and an opportunity for a hearing","Approval from NASAA","A 90-day waiting period"],cor:1,exp:"Due process requires the Administrator to provide written notice of the grounds for revocation AND give the registrant an opportunity for a hearing before revocation becomes final."},
+        {q:"An Administrator from State X wants to investigate a BD that also operates in State Y. Regarding cross-state cooperation:",opts:["Each state can only investigate its own registrants","The USA specifically authorizes cooperation between state Administrators and with federal agencies","Cross-state investigations require a federal court order","FINRA must authorize any cross-state investigation"],cor:1,exp:"The USA explicitly authorizes interstate cooperation. Administrators may share information and cooperate with other state Administrators and with federal agencies like the SEC."}
+      ]
+    },
+    {
+      id:'def-9', num:'1.9', title:'Investors',
+      paragraphs:[
+        "Under the USA, investors receive protections through registration requirements, anti-fraud provisions, and civil remedies. But certain types of investors receive different treatment depending on their sophistication.",
+        "Institutional investors include banks, insurance companies, investment companies, pension plans, and other financial institutions. Transactions with institutional investors are often exempt from registration because they are presumed sophisticated.",
+        "Non-institutional investors — retail investors — receive the full protection of the USA's registration requirements. Private placement exemptions limit sales to 10 or fewer retail investors in a 12-month period.",
+        "Accredited investors under federal law (Rule 501) include individuals with over $1M in net worth (excluding primary residence) or income over $200K ($300K with spouse). This concept overlaps with the qualified client standard for performance fees."
+      ],
+      quiz:[
+        {q:"Which of the following is an institutional investor?",opts:["A high-net-worth individual with $5M in assets","A pension fund","A retired stockbroker","An accredited investor with $1.5M net worth"],cor:1,exp:"Institutional investors are entities like banks, insurance companies, pension funds, and investment companies. High-net-worth individuals, even accredited ones, are not institutional investors under the USA."},
+        {q:"The state private placement exemption limits sales to non-institutional investors to:",opts:["5 or fewer in 12 months","10 or fewer in 12 months","25 or fewer in 12 months","No limit if they are accredited investors"],cor:1,exp:"The state private placement exemption allows sales to 10 or fewer non-institutional (retail) investors in any 12-month period, with no general advertising and no commissions to unregistered persons."},
+        {q:"Why are transactions with institutional investors often exempt from registration?",opts:["Federal law preempts state registration for all institutional trades","Institutional investors are presumed sophisticated and capable of protecting themselves","They are excluded from the definition of investor under the USA","The SEC handles all registration for institutional transactions"],cor:1,exp:"Transactions with institutional investors are exempt because they are presumed to be sophisticated — they can evaluate risks and protect their own interests without the full disclosure machinery of registration."},
+        {q:"A performance fee (based on capital gains) can be charged to a client who has:",opts:["Any net worth if they sign a consent form","$1.1M or more managed with the IA, OR $2.2M+ net worth — a 'qualified client'","$200K+ annual income — an accredited investor","$500K+ in liquid assets"],cor:1,exp:"Performance fees are only permitted for 'qualified clients': those with $1.1M+ under management with the IA OR $2.2M+ net worth. Accredited investor status alone is insufficient."}
+      ]
+    },
+    {
+      id:'def-10', num:'1.10', title:'Offers & Sales',
+      paragraphs:[
+        "An offer is any attempt to dispose of a security for value — including solicitation and any communication that could reasonably be understood as an attempt to sell. The definition is broad intentionally.",
+        "A sale is any contract to sell, or any disposition of, a security or interest in a security for value. Gifts of assessable securities count as sales because the recipient takes on liability.",
+        "Not all transfers are sales. Stock dividends, splits, and conversions are not sales if no additional consideration is paid. These are exempt transactions.",
+        "The location of an offer matters for jurisdiction. If an offer is made in a state, or directed to a person in a state, the USA of that state applies — even if the offeror is located elsewhere. This is why registration requirements apply across state lines."
+      ],
+      quiz:[
+        {q:"Which of the following is an 'offer' under the USA?",opts:["A tombstone ad announcing a completed offering","A preliminary prospectus sent to potential investors","A routine trade confirmation sent after a sale","An annual report mailed to existing shareholders"],cor:1,exp:"A preliminary prospectus sent to potential investors is a solicitation — an attempt to generate interest in buying — which meets the definition of an offer under the USA."},
+        {q:"A shareholder receives additional shares as a stock dividend. No cash changes hands. This transaction is:",opts:["A sale — shares were transferred","Not a sale — no additional consideration was paid","An offer — the company solicited the shareholder","A violation — shares must be registered before distribution"],cor:1,exp:"Stock dividends, splits, and conversions are not sales when no additional consideration is paid. They are specifically exempt transactions under the USA."},
+        {q:"A gift of assessable securities is treated as:",opts:["A gift — not a sale","A sale — because the recipient takes on potential liability","An offer only — not a completed sale","Exempt from the USA entirely"],cor:1,exp:"Gifts of assessable securities ARE sales under the USA because the recipient takes on liability (assessable means additional calls for payment could be made). The value transferred is the liability assumed."},
+        {q:"An issuer in State A sends an email offering securities to a resident of State B. Which state's USA applies?",opts:["State A only — that's where the issuer is located","State B only — that's where the offer is directed","Both states — the offer is made in State A and directed to State B","Neither — email offers are governed only by federal law"],cor:2,exp:"Both states have jurisdiction. The USA applies whenever an offer is made from a state OR directed into a state. The issuer must comply with both State A's and State B's laws."}
+      ]
+    }
+  ],
+  cards:[
+    {f:"Excluded vs. Exempt — key difference?",b:"Excluded = outside the definition entirely, cannot register voluntarily.\nExempt = fits the definition but a specific requirement doesn't apply — CAN register voluntarily."},
+    {f:"The Howey Test (is it a security?)",b:"Investment of money → in a common enterprise → with expectation of profits → primarily from the efforts of others. All four elements needed."},
+    {f:"Fixed annuity vs. variable annuity",b:"Fixed annuity = insurance product = NOT a security (insurer bears risk).\nVariable annuity = security (investor bears risk through separate account)."},
+    {f:"Three-prong test for Investment Adviser",b:"(1) Advice about securities + (2) as a regular business + (3) for compensation. All three required."},
+    {f:"IA AUM thresholds",b:"Under $100M → state registration.\n$100M–$110M → choice of either.\nOver $110M → must register with SEC (federal covered adviser)."},
+    {f:"When does BD registration become effective?",b:"Noon on the 30th day after filing a complete application — unless the Administrator accelerates or denies it."},
+    {f:"Out-of-state BD exclusion",b:"No office in the state AND 5 or fewer non-institutional clients in 12 months → excluded from BD definition in that state."},
+    {f:"Performance fee — qualified client threshold",b:"$1.1M or more managed with the IA, OR $2.2M+ net worth."},
+    {f:"State private placement limit",b:"10 or fewer non-institutional investors in 12 months. No general advertising. No commissions to unregistered persons."},
+    {f:"Exempt securities (no state registration needed)",b:"U.S. government, municipal bonds, bank-issued, exchange-listed (federal covered), nonprofit org securities, commercial paper < 9 months maturity."}
+  ]
+},
+{
+  id:'registration', label:'2. Registration', icon:'📝', col:'#2563EB',
+  desc:'Registration of broker-dealers, agents, investment advisers, IARs, and securities.',
+  subs:[
+    {
+      id:'reg-1', num:'2.1', title:'Broker-Dealers',
+      paragraphs:[
+        "Broker-dealers register in each state where they have a place of business or conduct business with clients. The registration process: file a complete application → effective at noon on day 30 → expires December 31 each year.",
+        "The Administrator can deny, suspend, or revoke a BD's registration for: willful violation of the USA or other securities laws; conviction of any felony or securities-related misdemeanor within the past 10 years; being enjoined by a court from securities activities; material misstatements in the application; insolvency; or dishonest or unethical business practices.",
+        "When a BD acquires another BD (a successor), the new firm may continue operating under the predecessor's registration for the rest of the year with Administrator consent.",
+        "A BD that wants to stop operations files a withdrawal. Withdrawal becomes effective 30 days after filing, unless a revocation or suspension proceeding is pending."
+      ],
+      quiz:[
+        {q:"On what grounds CAN the Administrator deny a BD's registration?",opts:["The BD lacks experience in the state's market","The BD was convicted of a felony 8 years ago","The BD's principals are under 30 years old","The BD has fewer than 5 employees"],cor:1,exp:"A felony conviction within the past 10 years is explicit grounds for denial. Lack of experience, young staff, or small size are not grounds under the USA."},
+        {q:"A BD files for withdrawal. When does it take effect?",opts:["Immediately upon filing","30 days after filing, unless a proceeding is pending","60 days after filing","At year end — December 31"],cor:1,exp:"Withdrawal of a BD registration takes effect 30 days after filing, UNLESS a revocation or suspension proceeding is pending, in which case it does not become effective until the proceeding is resolved."},
+        {q:"BD Registration typically expires on:",opts:["The anniversary date of filing","December 31 each year","When the BD files a withdrawal","After 2 years if no violations occur"],cor:1,exp:"All securities registrations — BD, IA, agent, IAR — expire on December 31 of each year and must be renewed."},
+        {q:"An Administrator requests additional information on Day 20 of a pending BD registration. What happens to the 30-day clock?",opts:["The 30-day period continues as if nothing happened","The clock restarts from the date the additional information is filed","The application is automatically denied","The clock pauses until the information is received"],cor:1,exp:"When the Administrator requests additional information, the 30-day effectiveness clock RESTARTS from the date the new information is actually filed — not from the original application date."}
+      ]
+    },
+    {
+      id:'reg-2', num:'2.2', title:'Agents',
+      paragraphs:[
+        "Agents register in each state where they conduct business. Like BDs, agent registrations expire December 31 and must be renewed annually.",
+        "An agent can only be registered with one BD at a time (unless the BDs are affiliated). When changing firms, the agent's registration at the old firm terminates and a new registration must be filed with the new firm before the agent can do business.",
+        "Both the agent and the BD must promptly notify the Administrator when the agent-BD relationship terminates. The agent's registration is suspended until re-registered with a new BD.",
+        "Dishonest, unethical, or unlawful conduct by an agent is grounds for the Administrator to take action against both the agent AND the BD that employs them. A BD can be held responsible for the actions of its agents."
+      ],
+      quiz:[
+        {q:"An agent works for BD Alpha and wants to begin working for BD Beta while still at Alpha. This is:",opts:["Permitted if both BDs approve","Permitted if the Administrator approves","Prohibited — an agent can only be registered with one BD at a time (unless BDs are affiliated)","Permitted because the agent holds a valid state registration"],cor:2,exp:"An agent can only be registered with one BD at a time unless the BDs are affiliated. Dual registration requires the BDs to be related entities."},
+        {q:"Agent registration is suspended when:",opts:["The agent takes a vacation longer than 30 days","The agent-BD relationship terminates","The agent fails to renew by December 31","The agent is accused of any ethics violation"],cor:1,exp:"When the agent-BD relationship terminates, the agent's registration is suspended. It remains suspended until the agent files a new registration with a new BD."},
+        {q:"An agent commits fraud while working at a BD. Which is correct regarding the BD's liability?",opts:["The BD has no liability — agents are independent","The BD may be held liable for the agent's actions if it knew or should have known","The BD is automatically absolved if it filed the agent's registration properly","Only FINRA can act against the BD, not the state Administrator"],cor:1,exp:"BDs can be held responsible for the actions of their agents, especially if the BD knew or should have known about the misconduct. The Administrator can take action against both."},
+        {q:"Which is a valid ground to deny an agent's registration?",opts:["The agent is new to the securities industry","The agent was convicted of a securities-related misdemeanor 7 years ago","The agent has fewer than 5 years of experience","The BD the agent works for has less than $1M in net capital"],cor:1,exp:"A securities-related misdemeanor conviction within the past 10 years is explicit grounds for denial. Inexperience, short tenure, and the BD's financial condition are not."}
+      ]
+    },
+    {
+      id:'reg-3', num:'2.3', title:'Investment Advisers',
+      paragraphs:[
+        "State-registered IAs (under $100M AUM) must file with the state and pay fees. The IA registration process is similar to BD registration — complete application, 30-day effectiveness clock, December 31 expiration.",
+        "Federal covered advisers (over $110M AUM) register with the SEC and only file a notice with each state where they have a place of business (plus pay state fees). States cannot require more from federal covered advisers.",
+        "IAs must deliver Form ADV Part 2 (the brochure) to each client: either 48 hours before signing, OR at signing if the client has a 5-business-day no-penalty cancellation right. Annual updates must be delivered within 120 days of fiscal year end.",
+        "Contracts with advisory clients must include: description of services, fee schedule, contract term, disclosure of any discretionary authority, and a provision that assignment requires client consent. Any contract clause waiving the client's rights under the USA is void."
+      ],
+      quiz:[
+        {q:"A federal covered adviser must do which of the following in states where it operates?",opts:["Register as a state IA and pay state fees","File a notice and pay state fees — no full registration required","Register with both the SEC and each state","File only with the SEC — no state filing needed"],cor:1,exp:"Federal covered advisers file a notice (not full registration) with each state where they have a place of business, and pay state fees. States cannot impose full registration requirements on them."},
+        {q:"Form ADV Part 2 must be delivered to a new advisory client:",opts:["Within 30 days after signing the contract","At least 48 hours before signing, OR at signing with a 5-day no-penalty cancellation right","At signing with a client acknowledgment form","Only if the client specifically requests it"],cor:1,exp:"The brochure rule: deliver ADV Part 2 at least 48 hours before signing — OR deliver at signing if the client has the right to cancel within 5 business days without penalty."},
+        {q:"An advisory contract includes: 'Client waives all rights under the Uniform Securities Act.' This provision is:",opts:["Valid if the client signs it knowingly","Valid if the IA has a fiduciary duty waiver approved by the Administrator","Void and unenforceable — clients cannot waive USA rights","Valid only for institutional clients"],cor:2,exp:"Any contract provision waiving compliance with the USA — or the client's rights under it — is void and unenforceable, regardless of client consent."},
+        {q:"An IA wants to assign its advisory contracts to a new firm. This:",opts:["Can be done freely during a business acquisition","Requires prior written consent from each client","Can be done with 30 days written notice","Is prohibited under all circumstances"],cor:1,exp:"Assignment of an investment advisory contract requires the prior consent of the client. Even in a business acquisition, client consent must be obtained before contracts are transferred."}
+      ]
+    },
+    {
+      id:'reg-4', num:'2.4', title:'Investment Adviser Representatives',
+      paragraphs:[
+        "IARs register in states where the IA has a place of business. For IARs of state-registered IAs, each state registration requires a separate filing. For IARs of federal covered advisers, no state registration is required.",
+        "An IAR with more than 5 clients in a state must register there, even if neither the IAR nor the IA has an office in that state.",
+        "Like all registrations, IAR registrations expire December 31 and must be renewed. When an IAR leaves an IA, both the IAR and the IA must notify the Administrator."
+      ],
+      quiz:[
+        {q:"An IAR at a state-registered IA has 7 clients in State Y but no office there. The IA also has no office in State Y. The IAR must:",opts:["Register in State Y — more than 5 clients triggers registration","Not register in State Y — no office means no registration required","File a notice with State Y but no full registration","Register only if the IA also registers in State Y"],cor:0,exp:"Having more than 5 clients in a state — regardless of whether the IAR or IA has an office there — triggers state IAR registration in that state."},
+        {q:"An IAR at a federal covered adviser (SEC-registered) moves to a new state. Regarding state IAR registration:",opts:["Must register in the new state","Exempt from state IAR registration — federal covered adviser exemption applies","Must file a notice with the new state","Must register with FINRA in the new state"],cor:1,exp:"IARs of federal covered advisers are exempt from state registration requirements, regardless of where they work."},
+        {q:"Which statement about IAR registration is correct?",opts:["IARs and their IA firm share a single registration","IARs register separately from the IA firm","IARs only need one national registration with NASAA","IARs are not required to register at the state level"],cor:1,exp:"IARs register separately from the IA firm, just as agents register separately from broker-dealers. The firm and individuals have distinct registration requirements."}
+      ]
+    },
+    {
+      id:'reg-5', num:'2.5', title:'Securities Registration',
+      paragraphs:[
+        "Securities offered or sold in a state must be registered with the state Administrator — unless the security is exempt or the transaction is exempt.",
+        "Three methods of state registration: (1) Coordination — used when also registering federally under the 1933 Act; effective when the federal registration becomes effective; most common for IPOs. (2) Qualification — state-only review; the Administrator sets the effective date; used for intrastate offerings. (3) Filing/Notification — for seasoned SEC reporting companies (36+ months reporting, no material defaults); effective immediately upon filing.",
+        "Exempt securities never need state registration: U.S. government, municipal bonds, bank-issued, exchange-listed (federal covered), nonprofit organization securities, short-term commercial paper (< 9 months maturity).",
+        "Exempt transactions allow non-exempt securities to be sold without registration for that specific transaction: isolated non-issuer transactions, unsolicited brokerage transactions, private placements (≤10 retail investors/12 months), institutional investor transactions, and transactions with existing security holders (stock dividends, splits, conversions)."
+      ],
+      quiz:[
+        {q:"An issuer is filing simultaneously with the SEC under the 1933 Act. Which state registration method should they use?",opts:["Qualification","Filing/Notification","Coordination","None — federal registration preempts state registration"],cor:2,exp:"Coordination is used when the issuer is also registering federally. The state registration becomes effective at the same time as the federal registration."},
+        {q:"Which security does NOT need state registration?",opts:["A private placement to 12 retail investors","Variable annuity shares","A bond issued by the State of Texas","A new common stock IPO"],cor:2,exp:"Municipal bonds (state and local government securities) are exempt securities. The Texas bond requires no state registration. Variable annuities, large private placements, and new IPOs do require registration."},
+        {q:"An unsolicited order is one where:",opts:["The BD recommends the security to the client","The client initiates the order without any broker solicitation","The BD executes the trade without confirmation","The order is placed through an automated system"],cor:1,exp:"An unsolicited brokerage transaction occurs when the client initiates the order without solicitation from the broker. This is an exempt transaction — the broker just executes."},
+        {q:"A seasoned issuer has filed with the SEC for 40 months with no material defaults. It wants to register in a new state quickly. Best method:",opts:["Qualification — most thorough review","Coordination — matches federal timeline","Filing/Notification — effective immediately upon filing","No registration needed — seasoned issuers are always exempt"],cor:2,exp:"Filing/Notification is available to issuers with 36+ months of SEC reporting and no material defaults. It is effective immediately upon filing — the fastest method."},
+        {q:"Anti-fraud provisions apply to exempt transactions and exempt securities:",opts:["Never — exemptions mean the USA doesn't apply at all","Only to exempt transactions, not exempt securities","Always — anti-fraud rules apply to ALL securities and ALL persons","Only when the Administrator specifically extends them"],cor:2,exp:"Anti-fraud provisions are universal. There is no exemption from anti-fraud. Exemptions only apply to registration requirements."}
+      ]
+    }
+  ],
+  cards:[
+    {f:"Three methods of state securities registration",b:"1. Coordination — concurrent with SEC, same effective date\n2. Qualification — state-only, Admin sets effective date\n3. Filing/Notification — seasoned issuers (36+ months SEC reporting), effective immediately"},
+    {f:"Exempt securities — no state registration needed",b:"US govt/agency · Municipal bonds · Bank-issued · Exchange-listed (federal covered) · Nonprofit org · Commercial paper < 9 months"},
+    {f:"Exempt transactions — registration not required for that deal",b:"Isolated non-issuer · Unsolicited brokerage · Private placement ≤10 retail/12mo · Institutional investor · Existing security holder transactions"},
+    {f:"BD registration timeline",b:"File complete application → effective noon on Day 30 → expires Dec 31 → renew annually. Admin can accelerate or deny."},
+    {f:"Form ADV Part 2 delivery rule",b:"Deliver 48 hrs BEFORE signing — OR — at signing if client has 5-business-day no-penalty cancellation right."},
+    {f:"IA contract — required elements",b:"Description of services · Fee schedule · Contract term · Disclosure of discretionary authority · Assignment requires client consent. Waiver of USA rights = VOID."}
+  ]
+},
+{
+  id:'enforcement', label:'3. Enforcement', icon:'⚖️', col:'#DC2626',
+  desc:'The Administrator\'s powers, punitive and non-punitive actions, criminal penalties, and civil liability.',
+  subs:[
+    {
+      id:'enf-1', num:'3.1', title:"Administrator's Powers",
+      paragraphs:[
+        "The Administrator can make and enforce rules, issue subpoenas (compelling testimony and document production), conduct investigations (including cooperating with other states and the SEC), require records, and publish information about violations.",
+        "The Administrator can seek a court injunction — a cease-and-desist — to stop ongoing violations. They can also refer cases for criminal prosecution.",
+        "Crucially, the Administrator's power extends to fraud in all securities transactions in the state, whether the security is registered or exempt. There is no carve-out from the Administrator's enforcement power for exempt transactions."
+      ],
+      quiz:[
+        {q:"Which is NOT an Administrator power under the USA?",opts:["Issuing subpoenas for documents","Making rules to carry out the USA","Setting national securities registration standards","Publishing information about enforcement actions"],cor:2,exp:"The Administrator's power is state-level. Setting national registration standards is the role of NASAA (which writes model rules) and the SEC. Individual state Administrators cannot create national standards."},
+        {q:"Can the Administrator take enforcement action regarding a fraud committed in an exempt transaction?",opts:["No — the exemption removes the transaction from the USA entirely","Yes — anti-fraud enforcement applies to all transactions, exempt or not","Only if the securities themselves are also exempt","Only if FINRA refers the case"],cor:1,exp:"Anti-fraud enforcement is universal. The Administrator can act against fraud in any securities transaction — exempt or registered. The exemption only applies to registration requirements."},
+        {q:"The Administrator issues a subpoena to a BD for trading records. The BD refuses to comply. What can the Administrator do?",opts:["Nothing — subpoenas are only advisory","Immediately revoke the BD's registration","Seek a court order to enforce the subpoena","Refer the matter to FINRA only"],cor:2,exp:"The Administrator can seek a court order to enforce a subpoena against an uncooperative party. The Administrator does not have independent contempt power but can use the courts."}
+      ]
+    },
+    {
+      id:'enf-2', num:'3.2', title:'Punitive Actions',
+      paragraphs:[
+        "Punitive actions — denial, suspension, revocation — require grounds and due process. Grounds include: willful violation of securities laws; felony conviction (any felony) within 10 years; securities-related misdemeanor within 10 years; court injunction from securities activities; material misstatements in registration; insolvency; dishonest or unethical business practices.",
+        "Remember: lack of experience or training alone is NEVER grounds for denial or revocation. This is a classic exam trap.",
+        "Process: written notice of the grounds → opportunity for a hearing → Administrator's final order. For summary suspension (emergency), the Administrator acts first and offers a hearing after.",
+        "Withdrawal initiated by a registrant: takes effect 30 days after filing. If a revocation proceeding is pending when withdrawal is filed, withdrawal is delayed until the proceeding concludes."
+      ],
+      quiz:[
+        {q:"An agent was convicted of mail fraud (a felony) 6 years ago. Can the Administrator deny registration?",opts:["No — only securities-related convictions are grounds","Yes — any felony conviction within 10 years is grounds","No — 6 years is too old for the 5-year lookback","Yes, but only if FINRA also took action"],cor:1,exp:"ANY felony conviction within the past 10 years — not just securities felonies — is grounds for denial. Mail fraud qualifies. The lookback is 10 years."},
+        {q:"Which is NOT valid grounds for revoking a BD's registration?",opts:["Insolvency","Material misstatements in the registration application","Lack of experience in the bond market","Willful violation of the Uniform Securities Act"],cor:2,exp:"Lack of experience is never grounds for denial or revocation under the USA. The other three are explicit statutory grounds."},
+        {q:"A registrant files a withdrawal. A revocation proceeding is already pending. What happens?",opts:["The withdrawal takes effect immediately — the proceeding is moot","The withdrawal takes effect in 30 days regardless","The withdrawal is delayed until the revocation proceeding is resolved","The Administrator must choose one or the other"],cor:2,exp:"If a revocation or suspension proceeding is pending when withdrawal is filed, the withdrawal does not become effective until the proceeding concludes. This prevents registrants from escaping action by withdrawing."},
+        {q:"A registrant receives a denial of their registration application. What are they entitled to?",opts:["Nothing — the Administrator has absolute discretion","Written notice of the grounds and an opportunity for a hearing","Immediate reinstatement pending appeal","Arbitration before FINRA"],cor:1,exp:"Due process requires written notice of the grounds for denial AND an opportunity for a hearing before the denial is final. The Administrator cannot deny arbitrarily without explanation."}
+      ]
+    },
+    {
+      id:'enf-3', num:'3.3', title:'Non-Punitive Actions',
+      paragraphs:[
+        "Cancellation is the non-punitive administrative action. It applies when a registrant: has gone out of business, cannot be located, is legally incompetent, or (for an individual) is deceased. Cancellation is not a punishment — it is administrative housekeeping.",
+        "Cancellation requires no notice, no hearing, and no finding of wrongdoing. The Administrator simply removes the registrant from active status.",
+        "Contrast with revocation: revocation requires grounds (misconduct) + notice + hearing. Cancellation requires none of those — it is triggered by circumstance, not conduct.",
+        "A registrant can also withdraw voluntarily (see Registration section). Withdrawal = registrant's choice. Cancellation = Administrator's administrative action."
+      ],
+      quiz:[
+        {q:"A registered BD closes all operations, vacates its office, and cannot be contacted. The Administrator's appropriate action is:",opts:["Revocation — operating without an office violates the USA","Suspension — to protect clients while investigating","Cancellation — non-punitive action for a defunct registrant","Denial of renewal at year end"],cor:2,exp:"Cancellation is the correct action when a registrant has gone out of business or cannot be located. It is non-punitive and requires no grounds, notice, or hearing."},
+        {q:"Which BEST distinguishes revocation from cancellation?",opts:["Revocation is permanent; cancellation can be reversed","Revocation requires misconduct + due process; cancellation is administrative and requires neither","Cancellation requires a court order; revocation does not","Revocation is initiated by the registrant; cancellation by the Administrator"],cor:1,exp:"Revocation = punitive, requires grounds (misconduct) + notice + hearing. Cancellation = non-punitive, administrative cleanup for defunct/missing/incompetent registrants."},
+        {q:"An IAR is declared legally incompetent by a court. The Administrator will most likely:",opts:["Revoke the IAR's registration for unethical conduct","Suspend the IAR pending investigation","Cancel the IAR's registration — administrative action, not punitive","Deny the IAR's next renewal application"],cor:2,exp:"Legal incompetence is one of the specific triggers for cancellation — non-punitive administrative action. No wrongdoing is alleged; the person simply can no longer legally conduct business."}
+      ]
+    },
+    {
+      id:'enf-4', num:'3.4', title:'Criminal & Civil Consequences',
+      paragraphs:[
+        "Criminal penalties for willful violations of the USA: up to 3 years in prison AND/OR a fine up to $5,000 per violation. Criminal prosecution must begin within 5 years of the violation — this is the criminal statute of limitations.",
+        "Civil liability gives buyers a rescission remedy: return the securities → receive the original purchase price + interest at the legal rate − any income received (like dividends). The goal is to make the buyer whole, not to profit from the violation.",
+        "Civil statute of limitations: 2 years from discovery of the violation OR 3 years from the date of the transaction — whichever comes FIRST. If either clock runs out, the civil claim is barred.",
+        "A seller can avoid civil liability by showing the buyer knew about the violation, or that the seller did not know and could not reasonably have known about the violation (good faith defense)."
+      ],
+      quiz:[
+        {q:"A buyer discovers a USA violation 18 months ago; the sale happened 4 years ago. Is the civil claim timely?",opts:["Yes — within 2 years of discovery","No — more than 3 years from the transaction","Yes — 4 years is within the 5-year limit","No — only the 1-year discovery rule applies"],cor:1,exp:"The civil statute of limitations is the EARLIER of 2 years from discovery OR 3 years from the transaction. The transaction was 4 years ago — exceeding the 3-year transaction limit. The claim is barred even though discovery was recent."},
+        {q:"The criminal penalty for willful USA violations is:",opts:["Up to 1 year and/or $1,000 fine","Up to 3 years and/or $5,000 fine","Up to 5 years and/or $10,000 fine","Up to 10 years and/or $100,000 fine"],cor:1,exp:"Criminal penalty: up to 3 years in prison AND/OR up to $5,000 fine per willful violation. Prosecution must begin within 5 years."},
+        {q:"A buyer purchased securities in violation of the USA and received $200 in dividends. Their civil remedy allows them to recover:",opts:["The current market value plus dividends","Original purchase price + legal interest − $200 in dividends","Original purchase price only, no interest","Treble (3×) damages plus attorney fees"],cor:1,exp:"Civil rescission = original purchase price + legal rate interest − any income received (dividends, etc.). The $200 in dividends is subtracted. No treble damages under the USA."},
+        {q:"For criminal prosecution of a willful USA violation, proceedings must begin within:",opts:["1 year","3 years","5 years","10 years"],cor:2,exp:"The criminal statute of limitations for willful USA violations is 5 years from the date of the violation. Civil actions have shorter limits: 2 years from discovery or 3 years from the transaction."}
+      ]
+    }
+  ],
+  cards:[
+    {f:"Punitive vs. non-punitive Administrator actions",b:"Punitive (revocation, suspension, denial): require grounds + notice + hearing.\nNon-punitive (cancellation): no grounds, no notice, no hearing — administrative cleanup."},
+    {f:"Grounds for denial/revocation",b:"Willful USA violation · Any felony in 10 years · Securities misdemeanor in 10 years · Court injunction · Material misstatement · Insolvency · Dishonest/unethical conduct.\nNOT grounds: lack of experience."},
+    {f:"Criminal penalty for willful USA violation",b:"Up to 3 years prison AND/OR up to $5,000 fine. Prosecution must start within 5 years."},
+    {f:"Civil rescission remedy",b:"Original purchase price + legal rate interest − income received (dividends). Statute of limitations: EARLIER of 2 yrs from discovery OR 3 yrs from transaction."},
+    {f:"Summary suspension vs. formal revocation",b:"Summary suspension: immediate, no prior notice — emergency only. Hearing offered AFTER.\nFormal revocation: written notice + hearing BEFORE taking effect."},
+    {f:"Withdrawal by registrant",b:"Registrant initiates. Effective 30 days after filing — UNLESS a revocation/suspension proceeding is pending (then delayed until proceeding ends)."}
+  ]
+},
+{
+  id:'ethics', label:'4. Ethics', icon:'⚖️', col:'#16A34A',
+  desc:'Compensation rules, communications standards, client funds, unethical conduct, and vulnerable adult protections.',
+  subs:[
+    {
+      id:'eth-1', num:'4.1', title:'Compensation',
+      paragraphs:[
+        "An agent may not share in a client account's gains or losses unless: (1) the client provides written consent, AND (2) the agent invests their own funds in proportion to the sharing arrangement. Written consent alone is not enough.",
+        "Performance fees for investment advisers are only permitted for qualified clients — those with $1.1M+ managed with the IA or $2.2M+ net worth. For all other clients, performance-based compensation is prohibited.",
+        "An agent cannot guarantee a client against investment losses under any circumstances. This prohibition is absolute — no agreement, no history of success, and no written documentation makes it permissible.",
+        "Borrowing money from clients, or lending money to clients, is prohibited for agents — unless the client is a financial institution in the business of lending. This is about preventing the inherent conflict of interest."
+      ],
+      quiz:[
+        {q:"An agent shares in a client's account profits. The client provided written consent. The agent did NOT invest personal funds proportionally. This is:",opts:["Permissible — written consent is sufficient","Prohibited — must also invest proportional personal funds","Permissible only if the BD approves","Permissible for gains only, not losses"],cor:1,exp:"Sharing in a client account requires BOTH written client consent AND proportional personal investment by the agent. Written consent alone is not enough."},
+        {q:"An IA wants to charge a performance fee to a client with $900K managed. The client's net worth is $1.8M. Is this permitted?",opts:["Yes — net worth exceeds $1M","No — neither the $1.1M managed threshold nor the $2.2M net worth threshold is met","Yes — any fee arrangement is OK with written consent","Yes — this is an institutional investor"],cor:1,exp:"Both thresholds are below the qualified client requirements: $900K managed (< $1.1M) AND $1.8M net worth (< $2.2M). Neither threshold is met, so a performance fee is prohibited."},
+        {q:"An agent tells a client: 'I've managed accounts like yours for 20 years and I guarantee you won't lose money.' This is:",opts:["Permissible if the agent has a strong track record","Permissible with written confirmation","Prohibited — guaranteeing against loss is always forbidden","Permissible only for conservative investments"],cor:2,exp:"Guaranteeing against investment loss is ALWAYS prohibited — regardless of track record, written documentation, or experience. The prohibition is absolute."},
+        {q:"An agent borrows $10,000 from an elderly client 'just for a month.' The client happily agrees in writing. This is:",opts:["Permissible — client consented in writing","Prohibited — agents may not borrow from clients regardless of consent","Permissible if the BD approves","Permissible if the loan carries market-rate interest"],cor:1,exp:"Agents are prohibited from borrowing from clients (or lending to clients) regardless of consent, documentation, or interest rate. The conflict of interest is inherent and cannot be waived."}
+      ]
+    },
+    {
+      id:'eth-2', num:'4.2', title:'Communications',
+      paragraphs:[
+        "All communications with clients must be fair, balanced, and not misleading. This includes advertising, sales literature, correspondence, and oral statements.",
+        "Misrepresentation: making a false statement of material fact. Omission: failing to disclose a material fact. Both are fraudulent under the USA — silence about something material is as fraudulent as lying.",
+        "Predicting specific price movements, guaranteeing future performance, and presenting simulated or hypothetical results as actual past performance are all prohibited.",
+        "Churning — excessive trading primarily to generate commissions — violates the duty to act in the client's interest. Key indicators: high turnover rate, high commission-to-value ratio, and account underperformance.",
+        "Front-running: trading in a personal account based on knowledge of an upcoming client order. The agent profits from the price movement the client's order will create. This is prohibited market manipulation."
+      ],
+      quiz:[
+        {q:"An agent fails to disclose that the issuer whose securities they are recommending is currently under SEC investigation. This is:",opts:["Permissible — agents are not required to know about SEC investigations","A material omission — fraudulent under the USA","Permissible if the agent did not personally know","Only prohibited if the investigation becomes public knowledge"],cor:1,exp:"Omitting a material fact — information a reasonable investor would consider important — is as fraudulent as a misrepresentation. An ongoing SEC investigation is clearly material."},
+        {q:"Churning is BEST identified by:",opts:["The agent recommending investments outside their expertise","Excessive trading in a client account to generate commissions","An agent trading in their personal account before client orders","Recommending high-risk investments to conservative clients"],cor:1,exp:"Churning = excessive trading primarily to generate commissions, not to benefit the client. Indicators: high turnover, high commission-to-value ratio, underperformance."},
+        {q:"An agent executes a personal trade in a stock before placing a known large client order in the same stock. This is:",opts:["Permissible if the personal trade is smaller than the client order","Front-running — prohibited market manipulation","Permissible if disclosed to the BD","An unsolicited transaction — exempt from the USA"],cor:1,exp:"Front-running = trading personal accounts based on knowledge of upcoming client orders to profit from the price movement the client's order will create. It is prohibited market manipulation."},
+        {q:"A broker presents a simulation showing 'hypothetical results from our strategy had it been applied over the past 10 years.' This is permissible if:",opts:["The simulation is disclosed as hypothetical, not actual results","The simulated results exceed 15% annually","The client signed a disclosure waiver","It is never permissible to show simulated results"],cor:0,exp:"Simulated or hypothetical performance can be shown IF it is clearly disclosed as such. Presenting hypothetical results AS IF they were actual past performance is prohibited fraud."}
+      ]
+    },
+    {
+      id:'eth-3', num:'4.3', title:'Customer Funds & Securities',
+      paragraphs:[
+        "Commingling: mixing client assets with firm or agent assets. This is always prohibited — client assets must be held separately.",
+        "Agents cannot have custody of client securities or funds unless the employing BD has procedures for it. Investment advisers with custody must: use a qualified custodian (bank or registered BD), send quarterly account statements to clients, and undergo annual surprise examination by an independent auditor.",
+        "Unauthorized trading: executing a trade without the client's prior authorization. If discretionary authority has not been explicitly granted in writing, every trade requires the client's specific approval.",
+        "Selling away: conducting private securities transactions outside the scope of the employing BD — without the firm's knowledge or approval. Even if the investment turns out well, selling away violates the USA."
+      ],
+      quiz:[
+        {q:"An agent temporarily mixes a client's $50,000 in a firm account while a new account is being opened. This is:",opts:["Permissible if brief and documented","Commingling — prohibited regardless of intent or duration","Permissible with client written consent","Permissible if the amount is less than $100,000"],cor:1,exp:"Commingling — mixing client assets with firm or agent assets — is always prohibited, regardless of duration, intent, or written consent."},
+        {q:"An IA with custody of client assets must do all of the following EXCEPT:",opts:["Use a qualified custodian","Send quarterly account statements to clients","Guarantee client assets against market losses","Undergo an annual surprise audit"],cor:2,exp:"No one can guarantee client assets against market losses. The custody requirements are: qualified custodian, quarterly statements, and annual surprise examination. Guarantees are prohibited."},
+        {q:"An agent executes a $50,000 trade in a client's account based on a phone call from the client's spouse (not the account holder). No written authorization exists. This is:",opts:["Permissible — the spouse has implied authority","Unauthorized trading — only the account holder can authorize trades without written authorization","Permissible if the account is a joint account","Permissible with the BD's approval"],cor:1,exp:"Unauthorized trading occurs when a trade is executed without the account holder's authorization. A spouse cannot authorize trades without written third-party authorization on file."},
+        {q:"An agent, without telling the BD, sells a client $100,000 of shares in a startup company. The investment eventually triples. The agent's conduct was:",opts:["Acceptable — the client made money","Selling away — prohibited regardless of investment outcome","Acceptable because the amount was under $500,000","Acceptable if the agent believed in the investment"],cor:1,exp:"Selling away — conducting private securities transactions outside the BD's knowledge and approval — is prohibited regardless of investment outcome. The ethics violation occurred when the agent bypassed the firm."}
+      ]
+    },
+    {
+      id:'eth-4', num:'4.4', title:'Unethical & Criminal Actions',
+      paragraphs:[
+        "Market manipulation is the intentional distortion of security prices or trading volume to mislead other investors: wash sales (simultaneous buy/sell to create fake volume), matched orders (coordinated trades to create artificial prices), painting the tape (publicizing fake trades), pump and dump (inflate price then dump), short and distort (short then spread false negative news).",
+        "Insider trading: buying or selling securities based on material non-public information. Information is material if a reasonable investor would consider it important. Information is non-public if it has not been properly released to the public. Both the insider and any tippee who trades on the information can be liable.",
+        "Unsuitable recommendations: recommending investments that do not match the client's risk tolerance, financial situation, investment objectives, or time horizon. Know your customer (KYC) is both a legal requirement and an ethical obligation.",
+        "Discretionary authority: an agent or IA who can decide what, when, and how much to trade without the client's approval on each trade. Must be granted in writing before any discretionary trades are placed. Selecting only the time and price of execution is NOT considered discretionary authority."
+      ],
+      quiz:[
+        {q:"A trader simultaneously buys and sells the same stock through related accounts to create the appearance of high volume. This is called:",opts:["Front-running","A wash sale","Painting the tape","Short and distort"],cor:1,exp:"A wash sale = simultaneous buy and sell of the same security by related parties to create false impression of trading activity. It is a form of market manipulation."},
+        {q:"A corporate executive learns their company will announce better-than-expected earnings next week and buys call options. This is:",opts:["Permissible — executives are allowed to own their company's stock","Insider trading — trading on material non-public information","Permissible if the options are held longer than 6 months","Permissible because earnings are always public eventually"],cor:1,exp:"Insider trading = buying or selling based on material non-public information. Upcoming earnings data that hasn't been released is material and non-public. Trading on it is illegal."},
+        {q:"An agent recommends a high-risk growth stock to a 75-year-old client with a stated objective of capital preservation and a fixed income. This is:",opts:["Permissible — clients can always buy what they want","An unsuitable recommendation","Permissible if the client signs a risk acknowledgment","Only unsuitable if the client loses money"],cor:1,exp:"Suitability requires matching investments to the client's risk tolerance, objectives, and situation. A high-risk growth stock is unsuitable for a conservative, capital-preservation-focused retiree."},
+        {q:"A client says verbally: 'Just manage my account however you see fit.' The agent begins making trades without checking with the client. This is:",opts:["Permissible — the client gave verbal authorization","Unauthorized trading — discretionary authority must be in writing before any trades","Permissible if the trades are suitable","Permissible for 30 days pending a written agreement"],cor:1,exp:"Discretionary authority MUST be granted in writing before any discretionary trades are placed. Verbal authorization — even if genuine — is insufficient. Trading without written authority is unauthorized trading."}
+      ]
+    },
+    {
+      id:'eth-5', num:'4.5', title:'Protecting Vulnerable Adults',
+      paragraphs:[
+        "A vulnerable adult is any person 65 or older, or any person 18 or older who has a mental or physical impairment that makes them susceptible to financial exploitation.",
+        "Securities professionals who reasonably believe financial exploitation of a vulnerable adult is occurring — or is being attempted — may place a temporary hold on disbursements from the account. This is a safe harbor provision — the professional is protected from liability for placing the hold.",
+        "The hold may last up to 15 business days (extendable by court order). The professional must immediately report the concern to the state Adult Protective Services (APS) and the securities Administrator.",
+        "Trusted contact persons: clients may designate someone (a family member, friend, or advisor) who can be contacted if the firm is concerned about the client's welfare or possible exploitation. Firms must ask about trusted contacts at account opening, but clients are not required to provide one."
+      ],
+      quiz:[
+        {q:"A 72-year-old client asks her broker to wire $200,000 to an unknown third party, which is unusual for her account. The broker may:",opts:["Immediately execute the wire — it's the client's money","Place a temporary hold on the disbursement if financial exploitation is suspected","Require a court order before taking any action","Only act if the family requests intervention"],cor:1,exp:"Securities professionals have a safe harbor to place a temporary hold on disbursements from a vulnerable adult's account when financial exploitation is reasonably suspected."},
+        {q:"The maximum length of an initial temporary hold on a vulnerable adult's account is:",opts:["5 business days","15 business days","30 calendar days","60 days with court approval"],cor:1,exp:"The initial temporary hold can last up to 15 business days. It can be extended beyond that only by court order."},
+        {q:"When placing a temporary hold due to suspected exploitation, what must the broker do immediately?",opts:["Contact the client's attorney","Report to Adult Protective Services and the state securities Administrator","Wait for the client to confirm the transaction","File a Suspicious Activity Report with FinCEN only"],cor:1,exp:"Upon placing a temporary hold, the professional must immediately report the concern to state Adult Protective Services (APS) AND the state securities Administrator."},
+        {q:"A trusted contact person on a brokerage account may be contacted by the firm to:",opts:["Authorize trades on behalf of the client","Receive account statements","Express concerns about the client's welfare or possible exploitation","Provide investment advice to the firm"],cor:2,exp:"A trusted contact is someone the firm can reach if concerned about the client's wellbeing or possible exploitation. They do NOT have authority to authorize transactions or manage the account."}
+      ]
+    },
+    {
+      id:'eth-6', num:'4.6', title:'Cybersecurity',
+      paragraphs:[
+        "Securities firms must maintain policies and procedures to protect client data and guard against cybersecurity threats. This includes: written information security programs (WISPs), identity theft red flag programs (required by Regulation S-ID), and business continuity plans.",
+        "Regulation S-P (Privacy Rule) requires firms to provide clients with an initial privacy notice and an annual privacy notice. Clients must be given the opportunity to opt out of sharing their non-public personal information with unaffiliated third parties.",
+        "Common cybersecurity threats firms must guard against: phishing (fraudulent emails/calls seeking sensitive information), social engineering, ransomware, and unauthorized account access.",
+        "When a data breach occurs, firms have reporting obligations to regulators and notification obligations to affected customers. Prompt response and remediation are legally required."
+      ],
+      quiz:[
+        {q:"Under Regulation S-P, clients must be provided with a privacy notice:",opts:["Only at account opening","At account opening and annually thereafter","Only when the privacy policy changes","Only if the client requests it"],cor:1,exp:"Regulation S-P requires an initial privacy notice at account opening AND an annual privacy notice thereafter. The annual notice keeps clients informed of the firm's data practices."},
+        {q:"A client wants to prevent their broker from sharing their non-public personal information with unaffiliated third parties. They should:",opts:["Close their account","Exercise their opt-out right under Regulation S-P","File a complaint with FINRA","Obtain a court injunction"],cor:1,exp:"Regulation S-P gives clients the right to opt out of having their non-public personal information shared with unaffiliated third parties. The firm must honor this opt-out."},
+        {q:"A written information security program (WISP) is primarily designed to:",opts:["Prevent clients from changing account passwords","Protect client data and guard against cybersecurity threats","Satisfy SEC marketing disclosure requirements","Replace the need for annual privacy notices"],cor:1,exp:"A WISP is an internal policy document detailing how a firm protects sensitive client and firm data from cybersecurity threats. It is a regulatory requirement for securities firms."},
+        {q:"Which BEST describes social engineering in the context of cybersecurity?",opts:["Using technical exploits to hack into a firm's servers","Manipulating employees or clients into revealing sensitive information through deception","Installing malware through email attachments","Intercepting network traffic to steal data"],cor:1,exp:"Social engineering = manipulating people (not just systems) through deception — posing as IT support, a regulator, or a client to get someone to reveal passwords or transfer funds."}
+      ]
+    }
+  ],
+  cards:[
+    {f:"Sharing in client accounts — conditions",b:"Requires: (1) written client consent AND (2) agent invests proportional personal funds. Written consent alone = NOT sufficient."},
+    {f:"Performance fee — qualified client threshold",b:"$1.1M+ managed with the IA OR $2.2M+ net worth. Below either threshold = performance fee prohibited."},
+    {f:"Commingling",b:"Mixing client assets with firm or personal assets. ALWAYS prohibited regardless of intent, duration, or consent."},
+    {f:"Guaranteeing against loss",b:"ALWAYS prohibited. No agreement, track record, or written document makes it permissible."},
+    {f:"Discretionary authority",b:"Deciding WHAT to buy/sell AND HOW MUCH without per-trade client approval. Must be in WRITING before any discretionary trades."},
+    {f:"Trusted contact person",b:"Designated by client for the firm to contact if concerned about welfare or exploitation. Does NOT have account authority."},
+    {f:"Vulnerable adult temporary hold",b:"Up to 15 business days. Must immediately report to Adult Protective Services AND state Administrator."},
+    {f:"Regulation S-P (Privacy Rule)",b:"Initial privacy notice at account opening + annual notice. Clients can opt out of sharing with unaffiliated third parties."},
+    {f:"Selling away",b:"Conducting private securities transactions outside the employing BD's knowledge/approval. Prohibited regardless of investment outcome."},
+    {f:"Suitability rule",b:"Recommendations must match client's risk tolerance, financial situation, investment objectives, and time horizon. KYC is required."}
+  ]
+},
+{
+  id:'wrapping', label:'Wrapping Up', icon:'🎓', col:'#D97706', isWrap:true,
+  desc:'Summary review, key concepts, and exam-day reminders.',
+  subs:[], cards:[]
+}
+];
 
-// ===== SIDEBAR FUNCTIONS =====
-function openSidebar() {
+/* ═══════════════════════════════════════════════════════════
+   KEY CONCEPTS for Wrapping Up
+═══════════════════════════════════════════════════════════ */
+const KEY_CONCEPTS = [
+  {ico:'📋',term:'Excluded vs. Exempt',def:'Excluded = outside the definition entirely. Exempt = fits but requirement waived. Only exempt persons can register voluntarily.'},
+  {ico:'🏦',term:'BD Out-of-State Exclusion',def:'No office + 5 or fewer non-institutional clients in 12 months = excluded from BD definition in that state.'},
+  {ico:'📊',term:'IA Registration Thresholds',def:'<$100M AUM → state. $100M–$110M → choice. >$110M → SEC (federal covered adviser).'},
+  {ico:'🗓️',term:'All Registrations Expire Dec 31',def:'BD, IA, agent, IAR — all expire December 31 annually. Registration effective = noon on Day 30 after complete filing.'},
+  {ico:'📝',term:'Three Securities Registration Methods',def:'Coordination (+ federal), Qualification (state-only), Filing/Notification (seasoned issuer, 36+ mo, effective immediately).'},
+  {ico:'🚫',term:'Anti-Fraud is Universal',def:'No exemption from anti-fraud — applies to ALL securities, ALL persons, ALL transactions. Omissions = misrepresentations.'},
+  {ico:'⚖️',term:'Punitive vs. Non-Punitive Actions',def:'Revocation/denial/suspension = punitive → need grounds + notice + hearing. Cancellation = non-punitive administrative cleanup.'},
+  {ico:'💰',term:'Civil Rescission Formula',def:'Original price + legal interest − income received. Statute of limitations: earlier of 2 yrs from discovery OR 3 yrs from transaction.'},
+  {ico:'🔒',term:'Custody Requirements (IA)',def:'Qualified custodian + quarterly statements to clients + annual SURPRISE audit + notify Administrator.'},
+  {ico:'👴',term:'Vulnerable Adult Temporary Hold',def:'Up to 15 business days. Must immediately report to Adult Protective Services + state Administrator.'},
+  {ico:'📣',term:'Reg S-P Privacy Rule',def:'Initial privacy notice at opening + annual notice. Clients can opt out of sharing with unaffiliated third parties.'},
+  {ico:'✅',term:'Discretionary Authority',def:'Must be in WRITING before any discretionary trades. Verbal consent = unauthorized trading.'}
+];
+
+/* ═══════════════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════════════ */
+let curSec = null;   // current section index in TREE
+let curSub = 0;      // current sub index within section
+let tab = 'learn';
+let ci = 0, co = []; // flashcard index + order
+
+// Per-subsection quiz state: { [subId]: { cor, inc, tot, pct } }
+let subProgress = {};
+
+// Per-section flashcard state
+let fsz = 0, dys = false, wsp = true, hic = false;
+
+/* ── AUDIO ── */
+const synth = window.speechSynthesis;
+let voice = null, allVoices = [];
+let apPlaying = false, apElapsed = 0, apTotalSec = 0, apTimer = null;
+let apSpeed = 1; const SPEEDS = [0.75,1,1.25,1.5,1.75]; let spIdx=1;
+let wordSpans = [], curWordIdx = -1;
+let chunks = [], curChunk = 0;
+
+/* ─── VOICE INIT ─── */
+/* ─── VOICE ENGINE ───────────────────────────────────────
+   ALLOWED: Google neural voices only (Chrome)
+   BLOCKED: All Microsoft voices (robotic)
+   BLOCKED: All Apple voices (robotic on web)
+   FALLBACK: Show a "use Chrome" message if no Google voice
+─────────────────────────────────────────────────────── */
+function scoreVoice(v) {
+  const n = v.name;
+  // BLOCK Microsoft — always robotic
+  if (n.toLowerCase().includes('microsoft')) return -1;
+  // BLOCK Apple system voices — sound robotic in browser TTS
+  if (['Samantha','Alex','Karen','Moira','Daniel','Tessa','Rishi','Nicky',
+       'Ava','Victoria','Allison','Susan','Zoe','Tom','Fred','Junior','Agnes',
+       'Bahh','Bells','Boing','Bubbles','Cellos','Deranged','Good News',
+       'Hysterical','Pipe Organ','Princess','Ralph','Trinoids','Whisper','Zarvox'
+      ].some(a => n.includes(a))) return -1;
+  if (n.toLowerCase().includes('com.apple')) return -1;
+  // ALLOW: Google voices — neural, sound human
+  if (n.includes('Google US English'))        return 100;
+  if (n.includes('Google UK English Female')) return 95;
+  if (n.includes('Google UK English Male'))   return 88;
+  if (n.startsWith('Google'))                 return 80;
+  // Everything else blocked
+  return -1;
+}
+
+function voiceLabel(v) {
+  const n = v.name;
+  if (n.includes('Google US English'))        return '⭐ Google US English (Best)';
+  if (n.includes('Google UK English Female')) return '⭐ Google UK English';
+  if (n.startsWith('Google'))                 return '✨ ' + n;
+  return n;
+}
+
+function loadVoices() {
+  allVoices = synth.getVoices();
+  if (!allVoices.length) return;
+
+  // Google-only filter
+  const googleV = allVoices
+    .map(v => ({ v, score: scoreVoice(v) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.v);
+
+  const sel = document.getElementById('voice-sel');
+  const noteEl = document.getElementById('voice-note');
+  sel.innerHTML = '';
+
+  if (!googleV.length) {
+    sel.innerHTML = '<option value="">No Google voice — open in Chrome</option>';
+    if (noteEl) {
+      noteEl.textContent = '⚠️ Open in Chrome for human-sounding voice';
+      noteEl.style.color = '#FCD34D';
+    }
+    voice = null;
+    return;
+  }
+
+  googleV.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = voiceLabel(v);
+    if (i === 0) { o.selected = true; voice = v; }
+    sel.appendChild(o);
+  });
+
+  if (noteEl) {
+    noteEl.textContent = '✅ Google neural voice — sounds human';
+    noteEl.style.color = '#4ADE80';
+  }
+}
+
+function setVoice(name) {
+  const v = allVoices.find(v => v.name === name);
+  if (!v || scoreVoice(v) < 0) {
+    const noteEl = document.getElementById('voice-note');
+    if (noteEl) { noteEl.textContent = '🚫 Only Google voices allowed'; noteEl.style.color = '#FCA5A5'; }
+    return;
+  }
+  voice = v;
+  if (apPlaying) { apStop(); setTimeout(() => apPlay(), 80); }
+}
+
+synth.onvoiceschanged = loadVoices;
+loadVoices();
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR / MOBILE
+═══════════════════════════════════════════════════════════ */
+function openSidebar(){
   document.getElementById('sidebar').classList.add('mobile-open');
   document.getElementById('ov').classList.add('show');
+  document.body.style.overflow='hidden';
+  document.getElementById('sb-close').style.display='flex';
 }
-
-function closeSidebar() {
+function closeSidebar(){
   document.getElementById('sidebar').classList.remove('mobile-open');
   document.getElementById('ov').classList.remove('show');
+  document.body.style.overflow='';
 }
 
-// ===== ACCESSIBILITY FUNCTIONS =====
-function toggleDys() {
-  STATE.dyslexic = !STATE.dyslexic;
-  document.body.classList.toggle('dys');
-  document.getElementById('t-dys').classList.toggle('on');
-  localStorage.setItem('dyslexic', STATE.dyslexic);
+/* ═══════════════════════════════════════════════════════════
+   VIEWS
+═══════════════════════════════════════════════════════════ */
+function showV(id){
+  ['v-home','v-section','v-prog','v-wrap'].forEach(v=>document.getElementById(v).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function setNI(secId,subId){
+  document.querySelectorAll('.sb-sec-btn').forEach(b=>b.classList.remove('active-sec'));
+  document.querySelectorAll('.sb-sub-item').forEach(b=>b.classList.remove('on'));
+  if(secId){
+    const sb = document.querySelector('.sb-sec-btn[data-id="'+secId+'"]');
+    if(sb) sb.classList.add('active-sec');
+  }
+  if(subId){
+    const si = document.querySelector('.sb-sub-item[data-id="'+subId+'"]');
+    if(si){ si.classList.add('on'); si.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+  }
+}
+function goHome(){
+  apStop(); curSec=null;
+  showV('v-home');
+  document.getElementById('tb-title').textContent='Series 63 Prep';
+  document.getElementById('tb-tabs').classList.add('hidden');
+  buildHome();
+  setNI(null,null);
+  updateOvr();
+  closeSidebar();
+}
+function showProg(){
+  apStop(); showV('v-prog');
+  document.getElementById('tb-title').textContent='My Progress';
+  document.getElementById('tb-tabs').classList.add('hidden');
+  renderProg(); closeSidebar();
+}
+function showWrap(){
+  apStop(); showV('v-wrap');
+  document.getElementById('tb-title').textContent='Wrapping Up';
+  document.getElementById('tb-tabs').classList.add('hidden');
+  renderWrap(); closeSidebar();
+}
+function openSection(i){
+  if(TREE[i].isWrap){ showWrap(); return; }
+  apStop(); curSec=i;
+  const s=TREE[i];
+  showV('v-section');
+  document.getElementById('tb-title').textContent=s.label;
+  document.getElementById('tb-tabs').classList.remove('hidden');
+  document.getElementById('sv-title').textContent=s.icon+' '+s.label;
+  document.getElementById('sv-desc').textContent=s.desc;
+  switchTab('learn');
+  closeSidebar();
 }
 
-function toggleWsp() {
-  STATE.wideSpacing = !STATE.wideSpacing;
-  document.body.classList.toggle('wsp');
-  document.getElementById('t-wsp').classList.toggle('on');
-  localStorage.setItem('wideSpacing', STATE.wideSpacing);
+/* ═══════════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════════ */
+function switchTab(t){
+  apStop(); tab=t;
+  ['learn','cards'].forEach(x=>document.getElementById('tc-'+x).classList.add('hidden'));
+  document.getElementById('tc-'+t).classList.remove('hidden');
+  document.getElementById('tab-l').classList.toggle('on',t==='learn');
+  document.getElementById('tab-c').classList.toggle('on',t==='cards');
+  if(t==='learn') showSubList();
+  if(t==='cards') initCards();
 }
 
-function cycleFontSize() {
-  const sizes = ['normal', 'large', 'xlarge'];
-  const idx = sizes.indexOf(STATE.fontSize);
-  STATE.fontSize = sizes[(idx + 1) % sizes.length];
-  
-  document.body.classList.remove('fsl', 'fsx');
-  if (STATE.fontSize === 'large') document.body.classList.add('fsl');
-  if (STATE.fontSize === 'xlarge') document.body.classList.add('fsx');
-  
-  const labels = { normal: 'Normal', large: 'Large', xlarge: 'XLarge' };
-  document.getElementById('t-fs').textContent = `Text: ${labels[STATE.fontSize]}`;
-  localStorage.setItem('fontSize', STATE.fontSize);
-}
-
-function toggleHic() {
-  STATE.highContrast = !STATE.highContrast;
-  document.body.classList.toggle('hic');
-  document.getElementById('t-hic').classList.toggle('on');
-  localStorage.setItem('highContrast', STATE.highContrast);
-}
-
-// ===== VOICE FUNCTIONS =====
-function setVoice(idx) {
-  localStorage.setItem('voiceIdx', idx);
-  const note = document.getElementById('voice-note');
-  note.textContent = idx > 0 ? '✓ Voice selected' : '';
-}
-
-function initVoices() {
-  const voices = window.speechSynthesis.getVoices();
-  const select = document.getElementById('voice-sel');
-  select.innerHTML = '';
-  voices.forEach((v, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = `${v.name} (${v.lang})`;
-    select.appendChild(opt);
+/* ═══════════════════════════════════════════════════════════
+   SUBSECTION LIST
+═══════════════════════════════════════════════════════════ */
+function showSubList(){
+  document.getElementById('sub-list-view').classList.remove('hidden');
+  document.getElementById('sub-detail-view').classList.add('hidden');
+  const s = TREE[curSec];
+  let h='';
+  s.subs.forEach((sb,i)=>{
+    const wc = sb.paragraphs.join(' ').split(/\s+/).length;
+    const sec = Math.round(wc/(130*apSpeed/60));
+    const m=Math.floor(sec/60), sc=sec%60;
+    const p = subProgress[sb.id];
+    const numCls = p ? 'sub-num done' : 'sub-num';
+    const numTxt = p ? '✓' : (sb.num||String(i+1));
+    let qzPill = '';
+    if(sb.quiz && sb.quiz.length){
+      if(p){
+        const col = p.pct>=80?'done':'';
+        qzPill=`<span class="qz-pill ${col}">${p.pct}% on ${p.tot}Qs</span>`;
+      } else {
+        qzPill=`<span class="qz-pill">${sb.quiz.length}Q quiz</span>`;
+      }
+    }
+    h+=`<div class="sub-item fa" onclick="openSub(${i})" style="animation-delay:${i*.04}s">
+      <div class="sub-item-inner">
+        <div class="${numCls}">${numTxt}</div>
+        <div class="sub-meta">
+          <div class="sub-title">${sb.num ? sb.num+' '+sb.title : sb.title}</div>
+          <div class="sub-pills">
+            <span class="dur-pill">🕐 ${m}:${sc<10?'0':''}${sc}</span>
+            ${qzPill}
+          </div>
+        </div>
+        <div class="sub-arrow">›</div>
+      </div>
+    </div>`;
   });
+  document.getElementById('sub-list').innerHTML = h;
 }
 
-window.speechSynthesis.onvoiceschanged = initVoices;
-
-// ===== NAVIGATION =====
-function goHome() {
-  STATE.currentView = 'home';
-  STATE.currentSection = null;
-  renderHome();
+function openSub(i){
+  curSub=i;
+  document.getElementById('sub-list-view').classList.add('hidden');
+  document.getElementById('sub-detail-view').classList.remove('hidden');
+  renderSubLesson();
+  initPlayer();
+  const s=TREE[curSec];
+  setNI(s.id, s.subs[i].id);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function backToList(){
+  apStop();
+  document.getElementById('sub-list-view').classList.remove('hidden');
+  document.getElementById('sub-detail-view').classList.add('hidden');
+  showSubList(); // refresh progress badges
+}
+function nextSub(){
+  const s=TREE[curSec];
+  if(curSub<s.subs.length-1) openSub(curSub+1);
+  else switchTab('cards');
 }
 
-function switchTab(tab) {
-  console.log('Switch to:', tab);
+/* ═══════════════════════════════════════════════════════════
+   RENDER LESSON + INLINE MINI-QUIZ
+   Words are pre-wrapped in <span class="w"> at render time
+   so highlighting is CSS class toggle only — ZERO DOM reflow
+═══════════════════════════════════════════════════════════ */
+function renderSubLesson(){
+  const s=TREE[curSec], sb=s.subs[curSub];
+
+  // Sub-tabs
+  let tabH='';
+  s.subs.forEach((x,i)=>{
+    tabH+=`<button class="sub-tab${i===curSub?' on':''}" onclick="openSub(${i})">${x.num||String(i+1)} ${x.title}</button>`;
+  });
+  document.getElementById('sub-tabs').innerHTML=tabH;
+
+  const isLast = curSub===s.subs.length-1;
+  document.getElementById('btn-next-sub').textContent = isLast ? 'Go to Flashcards →' : 'Next Topic →';
+
+  // Lesson body — tokenize words
+  let gw=0;
+  let html=`<div class="lesson-wrap"><div class="lesson-h3">${sb.num ? sb.num+' — '+sb.title : sb.title}</div>`;
+  sb.paragraphs.forEach(para=>{
+    html+='<p class="lesson-para">';
+    para.split(/(\s+)/).forEach(tok=>{
+      if(/^\s+$/.test(tok)) html+=tok;
+      else { html+=`<span class="w" data-wi="${gw}">${tok}</span>`; gw++; }
+    });
+    html+='</p>';
+  });
+  html+='</div>';
+
+  // Inline mini-quiz
+  if(sb.quiz && sb.quiz.length){
+    const L=['A','B','C','D'];
+    const prev = subProgress[sb.id];
+    html+=`<div class="mini-quiz" id="mq-wrap">
+      <div class="mq-header">
+        <div class="mq-title-wrap">
+          <div class="mq-eyebrow">✅ Topic Quiz</div>
+          <div class="mq-title">${sb.title}</div>
+        </div>
+        <div class="mq-live">
+          <span class="mq-c">✓ <span id="mq-c">0</span></span>
+          <span style="color:var(--ghost)">·</span>
+          <span class="mq-i">✗ <span id="mq-i">0</span></span>
+          <span style="color:var(--ghost)">·</span>
+          <span class="mq-d"><span id="mq-d">0</span> done</span>
+        </div>
+      </div>`;
+    sb.quiz.forEach((q,qi)=>{
+      let opts='';
+      q.opts.forEach((o,oi)=>{
+        opts+=`<div class="mq-opt" id="mq-${qi}-${oi}" onclick="mqSel(${qi},${oi})">
+          <div class="mq-letter">${L[oi]}</div><div>${o}</div></div>`;
+      });
+      html+=`<div class="mq-q" id="mqq-${qi}">
+        <div class="mq-qnum">Question ${qi+1} of ${sb.quiz.length}</div>
+        <div class="mq-qtxt">${q.q}</div>
+        <div class="mq-opts">${opts}</div>
+        <button class="mq-submit" id="mqs-${qi}" onclick="mqSubmit(${qi})">Check Answer</button>
+        <div class="mq-exp" id="mqe-${qi}"></div>
+      </div>`;
+    });
+    html+=`<div class="mq-result" id="mq-result">
+      <div class="mq-rpct" id="mq-rpct">—</div>
+      <div class="mq-rmsg" id="mq-rmsg"></div>
+      <div class="mq-rbreakdown">
+        <div class="mq-rbd"><div class="n" id="mq-rc" style="color:var(--green)">—</div><div class="l">Correct</div></div>
+        <div class="mq-rbd"><div class="n" id="mq-ri" style="color:var(--red)">—</div><div class="l">Wrong</div></div>
+        <div class="mq-rbd"><div class="n" id="mq-rt">—</div><div class="l">Total</div></div>
+      </div>
+      <div class="mq-raction">
+        <button class="btn btn-s btn-sm" onclick="mqRetake()">🔄 Retake</button>
+        <button class="btn btn-p btn-sm" onclick="nextSub()">${isLast?'Flashcards →':'Next Topic →'}</button>
+      </div>
+    </div></div>`;
+  }
+
+  document.getElementById('lesson-area').innerHTML = html;
+  wordSpans = Array.from(document.querySelectorAll('#lesson-area .w'));
+  curWordIdx = -1;
+  mqInit();
 }
 
-function backToList() {
-  renderSection(STATE.currentSection);
+/* ─── MINI QUIZ STATE ─── */
+let mqA={}, mqS={}, mqCor=0, mqInc=0;
+function mqInit(){ mqA={}; mqS={}; mqCor=0; mqInc=0; }
+function mqSel(qi,oi){
+  if(mqS[qi]) return;
+  mqA[qi]=oi;
+  const sb=TREE[curSec].subs[curSub];
+  sb.quiz[qi].opts.forEach((_,i)=>document.getElementById('mq-'+qi+'-'+i)?.classList.remove('sel'));
+  document.getElementById('mq-'+qi+'-'+oi)?.classList.add('sel');
+  document.getElementById('mqs-'+qi)?.classList.add('show');
+}
+function mqSubmit(qi){
+  if(mqS[qi]) return;
+  const sb=TREE[curSec].subs[curSub];
+  const q=sb.quiz[qi];
+  const sel=mqA[qi];
+  if(sel===undefined) return;
+  mqS[qi]=true;
+  const ok=sel===q.cor;
+  if(ok) mqCor++;else mqInc++;
+  q.opts.forEach((_,oi)=>{
+    const el=document.getElementById('mq-'+qi+'-'+oi);
+    if(!el) return;
+    el.classList.remove('sel');
+    el.classList.add('done');
+    if(oi===q.cor) el.classList.add(ok&&oi===sel?'cor':'rev');
+    if(oi===sel&&!ok) el.classList.add('inc');
+  });
+  document.getElementById('mqs-'+qi).style.display='none';
+  const expEl=document.getElementById('mqe-'+qi);
+  expEl.innerHTML=`<div class="mq-exp-lbl">${ok?'✅ Correct':'❌ Incorrect'}</div>${q.exp}`;
+  expEl.classList.add('show',ok?'e-c':'e-i');
+  // update live counters
+  document.getElementById('mq-c').textContent=mqCor;
+  document.getElementById('mq-i').textContent=mqInc;
+  document.getElementById('mq-d').textContent=Object.keys(mqS).length;
+  if(Object.keys(mqS).length===sb.quiz.length) setTimeout(mqShowResult,500);
+}
+function mqShowResult(){
+  const sb=TREE[curSec].subs[curSub];
+  const tot=sb.quiz.length, pct=Math.round(mqCor/tot*100);
+  const col=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+  const msg=pct>=80?"🎉 Excellent! Move to the next topic.":pct>=60?'📈 Good — review and retry if you want.':'📖 Review the lesson above and retake.';
+  document.getElementById('mq-rpct').textContent=pct+'%';
+  document.getElementById('mq-rpct').style.color=col;
+  document.getElementById('mq-rmsg').textContent=msg;
+  document.getElementById('mq-rc').textContent=mqCor;
+  document.getElementById('mq-ri').textContent=mqInc;
+  document.getElementById('mq-rt').textContent=tot;
+  document.getElementById('mq-result').classList.add('show');
+  document.getElementById('mq-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  // save progress
+  subProgress[sb.id]={cor:mqCor,inc:mqInc,tot,pct};
+  updateOvr();
+  buildSbNav();
+}
+function mqRetake(){
+  document.getElementById('mq-result').classList.remove('show');
+  mqInit();
+  // reset all options
+  const sb=TREE[curSec].subs[curSub];
+  sb.quiz.forEach((_,qi)=>{
+    _.opts.forEach((__,oi)=>{
+      const el=document.getElementById('mq-'+qi+'-'+oi);
+      if(el) el.className='mq-opt';
+    });
+    document.getElementById('mqs-'+qi)?.classList.remove('show');
+    const exp=document.getElementById('mqe-'+qi);
+    if(exp){ exp.className='mq-exp'; exp.innerHTML=''; }
+  });
+  document.getElementById('mq-c').textContent='0';
+  document.getElementById('mq-i').textContent='0';
+  document.getElementById('mq-d').textContent='0';
 }
 
-function nextSub() {
-  console.log('Next subsection');
+/* ═══════════════════════════════════════════════════════════
+   AUDIO PLAYER
+═══════════════════════════════════════════════════════════ */
+function initPlayer(){
+  apStop();
+  const sb = TREE[curSec].subs[curSub];
+  apBuildText(sb);
+  apTotalSec = Math.round(apAllWords.length / (130 * apSpeed / 60));
+  apElapsed  = 0;
+  // No paragraph segments — single-utterance mode
+  document.getElementById('ap-segs').innerHTML = '';
+  updateScrubber(); updateTimeDisplay();
+  document.getElementById('ap-dot').classList.remove('show');
+  document.getElementById('ap-now').textContent = 'Tap ▶ to hear this lesson read aloud';
 }
 
-// ===== COUNTDOWN =====
-function cdToggleEdit() {
-  document.getElementById('cd-input-wrap').classList.toggle('show');
+/* ── SINGLE-UTTERANCE AUDIO ENGINE ────────────────────────
+   Reads the ENTIRE subsection as one fluid speech.
+   No paragraph chopping = natural, human-sounding delivery.
+   −15s/+15s skip rebuilds the utterance from the new offset.
+──────────────────────────────────────────────────────── */
+let apFullText = '';
+let apAllWords = [];
+let apActiveU  = null;
+
+function apBuildText(sb){
+  // Double-space between paragraphs so TTS adds a natural pause
+  apFullText = sb.paragraphs.map(p => p.trim()).join('  ');
+  apAllWords  = apFullText.split(/\s+/);
 }
 
-function cdSaveDate() {
-  const dateInput = document.getElementById('cd-date-input').value;
-  if (dateInput) {
-    localStorage.setItem('examDate', dateInput);
-    updateCountdown();
-    cdToggleEdit();
+function apToggle(){ if(apPlaying) apPause(); else apPlay(); }
+
+function apPlay(){
+  if(!synth){ alert('Text-to-speech not supported in this browser.'); return; }
+  synth.cancel();
+
+  // Calculate start-word from elapsed time
+  const wpm      = 130 * apSpeed;
+  const fromWord = Math.min(Math.round(apElapsed * wpm / 60), apAllWords.length - 1);
+  const slice    = apAllWords.slice(fromWord).join(' ');
+
+  const u = new SpeechSynthesisUtterance(slice);
+  u.rate   = apSpeed * 0.92;   // 0.92× = natural presenter pace
+  u.pitch  = 1.0;
+  u.volume = 1.0;
+  if(voice) u.voice = voice;
+  apActiveU = u;
+
+  const dotEl = document.getElementById('ap-dot');
+  const nowEl = document.getElementById('ap-now');
+  if(dotEl) dotEl.classList.add('show');
+  if(nowEl) nowEl.textContent = slice.substring(0,70) + (slice.length>70?'\u2026':'');
+
+  // Word-by-word highlight via onboundary
+  const avgCPW = slice.length / Math.max(apAllWords.slice(fromWord).length, 1);
+  u.onboundary = function(e){
+    if(e.name !== 'word') return;
+    const local  = Math.round(e.charIndex / Math.max(avgCPW, 1));
+    const global = fromWord + local;
+    hlWord(Math.min(global, wordSpans.length - 1));
+  };
+
+  u.onend   = function(){ if(apPlaying) apDone(); };
+  u.onerror = function(){ apPlaying=false; setPlayIco(false); clearInterval(apTimer); };
+
+  synth.speak(u);
+  apPlaying = true; setPlayIco(true);
+
+  clearInterval(apTimer);
+  apTimer = setInterval(()=>{
+    if(!apPlaying) return;
+    apElapsed = Math.min(apElapsed + 0.2, apTotalSec);
+    updateScrubber(); updateTimeDisplay();
+  }, 200);
+}
+
+function apDone(){
+  apPlaying = false; setPlayIco(false); clearHl();
+  clearInterval(apTimer);
+  const dotEl = document.getElementById('ap-dot');
+  const nowEl = document.getElementById('ap-now');
+  if(dotEl) dotEl.classList.remove('show');
+  if(nowEl) nowEl.textContent = 'Finished — press play to restart';
+  setTimeout(()=>{ apElapsed=0; updateScrubber(); updateTimeDisplay(); }, 1500);
+}
+
+function apPause(){
+  synth.pause();
+  apPlaying = false; setPlayIco(false);
+  clearInterval(apTimer);
+  const dotEl = document.getElementById('ap-dot');
+  if(dotEl) dotEl.classList.remove('show');
+}
+
+function apStop(){
+  if(synth) synth.cancel();
+  apActiveU  = null;
+  apPlaying  = false;
+  clearInterval(apTimer); clearHl();
+  const pb = document.getElementById('ap-play');
+  const pd = document.getElementById('ap-dot');
+  if(pb) setPlayIco(false);
+  if(pd) pd.classList.remove('show');
+}
+
+function apSkip(s){
+  const was = apPlaying;
+  apPause(); synth.cancel();
+  apElapsed = Math.max(0, Math.min(apElapsed + s, apTotalSec));
+  updateScrubber(); updateTimeDisplay();
+  if(was) setTimeout(()=> apPlay(), 80);
+}
+
+
+/* Scrubber */
+let scrubbing=false;
+function scrubStart(e){
+  const was=apPlaying; if(was){apPause();synth.cancel();}
+  scrubMove(e);
+  const mu=()=>{document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);if(was)setTimeout(()=>apPlay(),80);};
+  const mm=(e2)=>scrubMove(e2);
+  document.addEventListener('mousemove',mm); document.addEventListener('mouseup',mu);
+}
+function scrubMove(e){
+  const r=document.getElementById('ap-scrub').getBoundingClientRect();
+  const p=Math.max(0,Math.min((e.clientX-r.left)/r.width,1));
+  apElapsed=p*apTotalSec; updateScrubber(); updateTimeDisplay();
+}
+function scrubTouchStart(e){
+  const was=apPlaying; if(was){apPause();synth.cancel();}
+  scrubTouchMove(e);
+  const mu=()=>{document.removeEventListener('touchmove',tm);document.removeEventListener('touchend',mu);if(was)setTimeout(()=>apPlay(),80);};
+  const tm=(e2)=>scrubTouchMove(e2);
+  document.addEventListener('touchmove',tm,{passive:true}); document.addEventListener('touchend',mu);
+}
+function scrubTouchMove(e){
+  if(!e.touches.length) return;
+  const r=document.getElementById('ap-scrub').getBoundingClientRect();
+  const p=Math.max(0,Math.min((e.touches[0].clientX-r.left)/r.width,1));
+  apElapsed=p*apTotalSec; updateScrubber(); updateTimeDisplay();
+}
+function cycleSpeed(){
+  spIdx = (spIdx+1) % SPEEDS.length;
+  apSpeed = SPEEDS[spIdx];
+  apTotalSec = Math.round(apAllWords.length / (130 * apSpeed / 60));
+  document.getElementById('ap-spd').textContent = apSpeed + '×';
+  updateTimeDisplay();
+  if(apPlaying){ const e2=apElapsed; apPause(); synth.cancel(); apElapsed=e2; setTimeout(()=>apPlay(),80); }
+}
+function updateScrubber(){
+  const p=apTotalSec>0?Math.min(apElapsed/apTotalSec*100,100):0;
+  document.getElementById('ap-fill').style.width=p+'%';
+  document.getElementById('ap-thumb').style.left=p+'%';
+}
+function updateTimeDisplay(){
+  const f=s=>{const m=Math.floor(s/60),sc=Math.floor(s%60);return m+':'+(sc<10?'0':'')+sc;};
+  document.getElementById('ap-time').textContent=f(Math.min(apElapsed,apTotalSec))+' / '+f(apTotalSec);
+}
+// updateSegs removed — single-utterance mode has no segments
+
+function setPlayIco(playing){
+  const btn=document.getElementById('ap-play');
+  const ico=document.getElementById('ap-ico');
+  if(!btn) return;
+  btn.classList.toggle('playing',playing);
+  ico.innerHTML=playing?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<polygon points="5,3 19,12 5,21"/>';
+}
+
+/* Word highlight — ZERO REFLOW (CSS class toggle only) */
+function hlWord(idx){
+  if(curWordIdx>=0 && curWordIdx<wordSpans.length) wordSpans[curWordIdx].classList.remove('lit');
+  for(let i=Math.max(0,idx-2);i<idx&&i<wordSpans.length;i++) wordSpans[i].classList.add('past');
+  curWordIdx=idx;
+  if(idx>=0 && idx<wordSpans.length){
+    const el=wordSpans[idx];
+    el.classList.add('lit'); el.classList.remove('past');
+    const r=el.getBoundingClientRect();
+    if(r.top<80||r.bottom>window.innerHeight-80) el.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+}
+function clearHl(){
+  wordSpans.forEach(w=>w.classList.remove('lit','past'));
+  curWordIdx=-1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FLASHCARDS
+═══════════════════════════════════════════════════════════ */
+function initCards(){
+  const s=TREE[curSec];
+  co=s.cards.map((_,i)=>i); ci=0; showCard();
+}
+function showCard(){
+  const s=TREE[curSec];
+  const c=s.cards[co[ci]];
+  document.getElementById('cf-f').textContent=c.f;
+  document.getElementById('cf-b').textContent=c.b;
+  document.getElementById('fc').classList.remove('flip');
+  document.getElementById('fc-rate').style.display='none';
+  document.getElementById('fc-cnt').textContent=(ci+1)+'/'+s.cards.length;
+  document.getElementById('fc-prev').disabled=ci===0;
+  document.getElementById('fc-next').disabled=ci===s.cards.length-1;
+}
+function flipCard(){
+  const fc=document.getElementById('fc');
+  fc.classList.toggle('flip');
+  document.getElementById('fc-rate').style.display=fc.classList.contains('flip')?'flex':'none';
+}
+function prevCard(){if(ci>0){ci--;showCard();}}
+function nextCard(){const s=TREE[curSec];if(ci<s.cards.length-1){ci++;showCard();}}
+function rateCard(){nextCard();}
+function shuffleCards(){co=TREE[curSec].cards.map((_,i)=>i).sort(()=>Math.random()-.5);ci=0;showCard();}
+
+/* ═══════════════════════════════════════════════════════════
+   PROGRESS
+═══════════════════════════════════════════════════════════ */
+function renderProg(){
+  let totalSubs=0, doneSubs=0, totalQ=0, totCor=0;
+  TREE.forEach(s=>{
+    if(s.isWrap) return;
+    s.subs.forEach(sb=>{
+      if(!sb.quiz||!sb.quiz.length) return;
+      totalSubs++;
+      const p=subProgress[sb.id];
+      if(p){doneSubs++;totalQ+=p.tot;totCor+=p.cor;}
+    });
+  });
+  const op=totalQ?Math.round(totCor/totalQ*100):0;
+  const opc=op>=80?'var(--green)':op>=60?'var(--amber)':'var(--blue)';
+  document.getElementById('prog-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${doneSubs}</div><div class="stat-lbl">Topics Completed</div></div>
+    <div class="stat-card"><div class="stat-val">${totalSubs}</div><div class="stat-lbl">Total Topics</div></div>
+    <div class="stat-card"><div class="stat-val">${totCor}</div><div class="stat-lbl">Correct Answers</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:${opc}">${op}%</div><div class="stat-lbl">Overall Score</div></div>`;
+  let lh='';
+  TREE.forEach((s,si)=>{
+    if(s.isWrap||!s.subs.length) return;
+    const quizSubs=s.subs.filter(sb=>sb.quiz&&sb.quiz.length);
+    const doneCount=quizSubs.filter(sb=>subProgress[sb.id]).length;
+    const secPct=quizSubs.length?Math.round(doneCount/quizSubs.length*100):0;
+    const col=secPct>=80?'var(--green)':secPct>=60?'var(--amber)':'var(--ghost)';
+    lh+=`<div class="prog-sec-item">
+      <div class="psi-head">
+        <div class="psi-name">${s.icon} ${s.label}</div>
+        <div class="psi-pct" style="color:${col}">${doneCount}/${quizSubs.length}</div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" style="width:${secPct}%;background:${col}"></div></div>
+      <div class="psi-acts">
+        <button class="btn btn-s btn-sm" onclick="openSection(${si})">Continue →</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('prog-list').innerHTML=lh;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WRAPPING UP
+═══════════════════════════════════════════════════════════ */
+function renderWrap(){
+  let totalSubs=0, doneSubs=0, totalQ=0, totCor=0;
+  TREE.forEach(s=>{
+    if(s.isWrap) return;
+    s.subs.forEach(sb=>{
+      if(!sb.quiz||!sb.quiz.length) return;
+      totalSubs++;
+      const p=subProgress[sb.id];
+      if(p){doneSubs++;totalQ+=p.tot;totCor+=p.cor;}
+    });
+  });
+  const op=totalQ?Math.round(totCor/totalQ*100):0;
+  document.getElementById('wrap-stats').innerHTML=`
+    <div class="wrap-stat"><div class="n">${doneSubs}/${totalSubs}</div><div class="l">Topics Done</div></div>
+    <div class="wrap-stat"><div class="n" style="color:${op>=80?'var(--green)':op>=60?'var(--amber)':'var(--blue)'}">${op}%</div><div class="l">Avg Score</div></div>
+    <div class="wrap-stat"><div class="n">${totCor}</div><div class="l">Correct Answers</div></div>`;
+  document.getElementById('kc-list').innerHTML=KEY_CONCEPTS.map(k=>`
+    <div class="kc-item">
+      <div class="kc-ico">${k.ico}</div>
+      <div class="kc-body"><div class="kc-term">${k.term}</div><div class="kc-def">${k.def}</div></div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR NAV BUILD
+═══════════════════════════════════════════════════════════ */
+function buildSbNav(){
+  let h='';
+  // Home + Progress links
+  h+=`<div class="ni" id="ni-home" onclick="goHome();closeSidebar()"><span class="ni-ico">🏠</span><span class="ni-lbl">Home</span></div>`;
+  h+=`<div class="ni" id="ni-prog" onclick="showProg();closeSidebar()"><span class="ni-ico">📊</span><span class="ni-lbl">My Progress</span></div>`;
+  h+=`<div style="height:6px"></div>`;
+
+  TREE.forEach((s,si)=>{
+    if(s.isWrap){
+      // Wrapping up as a simple nav item
+      h+=`<div class="ni" onclick="showWrap();closeSidebar()"><span class="ni-ico">${s.icon}</span><span class="ni-lbl">${s.label}</span></div>`;
+      return;
+    }
+    // Section with expandable subs
+    const quizSubs=s.subs.filter(sb=>sb.quiz&&sb.quiz.length);
+    const done=quizSubs.filter(sb=>subProgress[sb.id]).length;
+    let badge='';
+    if(done>0){
+      const pct=Math.round(done/quizSubs.length*100);
+      const cls=pct>=80?'sc-g':pct>=60?'sc-y':'sc-r';
+      badge=`<span class="sb-sec-score ${cls}">${done}/${quizSubs.length}</span>`;
+    }
+    const isOpen = curSec===si;
+    h+=`<div class="sb-section" id="sbsec-${si}">
+      <button class="sb-sec-btn${isOpen?' active-sec':''}" data-id="${s.id}" onclick="sbToggle(${si})">
+        <span class="sb-sec-ico">${s.icon}</span>
+        <span class="sb-sec-lbl">${s.label}</span>
+        ${badge}
+        <span class="sb-sec-arrow${isOpen?' open':''}" id="sbarrow-${si}">▼</span>
+      </button>
+      <div class="sb-subs" id="sbsubs-${si}" style="max-height:${isOpen?s.subs.length*44+'px':'0'}">`;
+    s.subs.forEach((sb,sbi)=>{
+      const p=subProgress[sb.id];
+      const check=p?(p.pct>=80?'✅':p.pct>=60?'🟡':'🔴'):'';
+      const isCurSub=curSec===si&&curSub===sbi&&tab==='learn';
+      h+=`<div class="sb-sub-item${isCurSub?' on':''}" data-id="${sb.id}" onclick="openSection(${si});setTimeout(()=>openSub(${sbi}),50);closeSidebar()">
+        <span class="sb-sub-num">${sb.num||String(sbi+1)}</span>
+        <span class="sb-sub-lbl">${sb.title}</span>
+        <span class="sb-sub-check">${check}</span>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  document.getElementById('sb-nav').innerHTML=h;
+}
+
+function sbToggle(si){
+  const subs=document.getElementById('sbsubs-'+si);
+  const arrow=document.getElementById('sbarrow-'+si);
+  const isOpen=subs.style.maxHeight!=='0px'&&subs.style.maxHeight!=='';
+  // Close all
+  TREE.forEach((_,i)=>{
+    const s2=document.getElementById('sbsubs-'+i);
+    const a2=document.getElementById('sbarrow-'+i);
+    if(s2){s2.style.maxHeight='0';}
+    if(a2) a2.classList.remove('open');
+  });
+  if(!isOpen){
+    subs.style.maxHeight=TREE[si].subs.length*44+'px';
+    arrow.classList.add('open');
+    openSection(si);
   }
 }
 
-function cdClearDate() {
-  localStorage.removeItem('examDate');
+/* ═══════════════════════════════════════════════════════════
+   HOME BUILD
+═══════════════════════════════════════════════════════════ */
+function buildHome(){
+  let h='';
+  TREE.forEach((s,i)=>{
+    const quizSubs=s.subs.filter(sb=>sb.quiz&&sb.quiz.length);
+    const done=quizSubs.filter(sb=>subProgress[sb.id]).length;
+    let prog='';
+    if(done>0){
+      const pct=Math.round(done/quizSubs.length*100);
+      const col=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--blue)';
+      prog=`<div class="hsc-prog">
+        <div class="hsc-prog-row"><span>${done}/${quizSubs.length} topics done</span><span>${pct}%</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>
+      </div>`;
+    }
+    const chips=!s.isWrap ? `<div class="hsc-chips">
+      <span class="chip">📖 ${s.subs.length} topics</span>
+      ${s.cards.length?`<span class="chip">🃏 ${s.cards.length} cards</span>`:''}
+      ${quizSubs.length?`<span class="chip">✅ ${quizSubs.reduce((a,sb)=>a+(sb.quiz?sb.quiz.length:0),0)} Qs</span>`:''}
+    </div>` : '';
+    h+=`<div class="home-sec-card" onclick="openSection(${i})">
+      <div class="hsc-accent" style="--c:${s.col}"></div>
+      <div class="hsc-ico">${s.icon}</div>
+      <div class="hsc-info">
+        <div class="hsc-title">${s.label}</div>
+        <div class="hsc-desc">${s.desc}</div>
+        ${chips}
+        ${prog}
+      </div>
+      <div class="hsc-arrow">›</div>
+    </div>`;
+  });
+  document.getElementById('home-sections').innerHTML=h;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OVERALL PROGRESS
+═══════════════════════════════════════════════════════════ */
+function updateOvr(){
+  let total=0, done=0;
+  TREE.forEach(s=>{
+    if(s.isWrap) return;
+    s.subs.forEach(sb=>{
+      if(!sb.quiz||!sb.quiz.length) return;
+      total++;
+      if(subProgress[sb.id]) done++;
+    });
+  });
+  const pct = total ? Math.round(done/total*100) : 0;
+
+  // Sidebar mini bar
+  document.getElementById('sb-opct').textContent = pct+'%';
+  document.getElementById('sb-obar').style.width = pct+'%';
+
+  // Home page progress bar
+  const hpbPct  = document.getElementById('hpb-pct');
+  const hpbFill = document.getElementById('hpb-fill');
+  const hpbDone = document.getElementById('hpb-done');
+  const hpbSecs = document.getElementById('hpb-sections');
+  if(hpbPct)  hpbPct.textContent  = pct+'%';
+  if(hpbFill) hpbFill.style.width = pct+'%';
+  if(hpbDone) hpbDone.textContent = done+' of '+total+' topics completed';
+
+  // Per-section color segments under the bar
+  if(hpbSecs){
+    let segsH = '';
+    TREE.forEach(s=>{
+      if(s.isWrap) return;
+      const qSubs = s.subs.filter(sb=>sb.quiz&&sb.quiz.length);
+      if(!qSubs.length) return;
+      const sDone = qSubs.filter(sb=>subProgress[sb.id]).length;
+      const sPct  = Math.round(sDone/qSubs.length*100);
+      // Each section gets a proportional-width segment, colored by completion
+      const flexW = qSubs.length;
+      let segCol = '#D6D0C8'; // empty - border color
+      if(sPct>=80)      segCol = 'var(--green)';
+      else if(sPct>=40) segCol = 'var(--amber)';
+      else if(sPct>0)   segCol = 'var(--blue)';
+      segsH += `<div title="${s.label}: ${sPct}%" style="flex:${flexW};height:6px;border-radius:2px;background:${segCol};transition:background .4s" ></div>`;
+    });
+    hpbSecs.innerHTML = '<div style="display:flex;gap:3px;width:100%">'+segsH+'</div>';
+  }
+
+  // Change bar gradient color when complete
+  if(hpbFill){
+    if(pct>=80)       hpbFill.style.background='linear-gradient(90deg,var(--green),#34D399)';
+    else if(pct>=50)  hpbFill.style.background='linear-gradient(90deg,var(--blue),#22D3EE)';
+    else              hpbFill.style.background='linear-gradient(90deg,var(--blue),#60A5FA)';
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXAM COUNTDOWN
+═══════════════════════════════════════════════════════════ */
+const CD_KEY = 's63_exam_date';
+
+function cdInit(){
+  const saved = localStorage.getItem(CD_KEY);
+  if(saved){
+    document.getElementById('cd-date-input').value = saved;
+    cdRender(saved);
+  }
+}
+
+function cdToggleEdit(){
+  const wrap = document.getElementById('cd-input-wrap');
+  wrap.classList.toggle('show');
+  const btn = document.getElementById('cd-set-btn');
+  btn.textContent = wrap.classList.contains('show') ? '✕ Cancel' : '📅 Set Date';
+}
+
+function cdSaveDate(){
+  const val = document.getElementById('cd-date-input').value;
+  if(!val) return;
+  localStorage.setItem(CD_KEY, val);
+  cdRender(val);
+  document.getElementById('cd-input-wrap').classList.remove('show');
+  document.getElementById('cd-set-btn').textContent = '📅 Edit Date';
+}
+
+function cdClearDate(){
+  localStorage.removeItem(CD_KEY);
+  document.getElementById('cd-date-input').value = '';
   document.getElementById('cd-days').textContent = '--';
   document.getElementById('cd-subtext').textContent = 'Tap "Set Date" to start your countdown';
-  cdToggleEdit();
+  document.getElementById('cd-input-wrap').classList.remove('show');
+  document.getElementById('cd-set-btn').textContent = '📅 Set Date';
 }
 
-function updateCountdown() {
-  const examDate = localStorage.getItem('examDate');
-  if (!examDate) return;
-  
+function cdRender(dateStr){
+  // Days only — simple, no ticker needed
   const today = new Date();
-  const exam = new Date(examDate);
-  const diff = Math.ceil((exam - today) / (1000 * 60 * 60 * 24));
-  
-  document.getElementById('cd-days').textContent = Math.max(0, diff);
-  if (diff < 0) {
-    document.getElementById('cd-subtext').textContent = 'Exam date has passed!';
+  today.setHours(0,0,0,0);
+  const exam = new Date(dateStr + 'T00:00:00');
+  exam.setHours(0,0,0,0);
+  const diffMs = exam - today;
+  const d = Math.round(diffMs / 86400000);
+
+  const daysEl = document.getElementById('cd-days');
+  const msgEl  = document.getElementById('cd-subtext');
+  const btnEl  = document.getElementById('cd-set-btn');
+
+  if(d < 0){
+    daysEl.textContent = '0';
+    msgEl.textContent  = 'Exam date has passed — update your date';
+    msgEl.style.color  = 'var(--red)';
+  } else if(d === 0){
+    daysEl.textContent = '0';
+    msgEl.textContent  = "🎯 Exam day — you've got this!";
+    msgEl.style.color  = 'var(--green)';
+  } else {
+    daysEl.textContent = d;
+    if(d <= 3)       { msgEl.textContent = '🔥 Final stretch — focus on weak areas'; msgEl.style.color = 'var(--red)'; }
+    else if(d <= 7)  { msgEl.textContent = '📖 One week out — one topic per day'; msgEl.style.color = 'var(--amber)'; }
+    else if(d <= 30) { msgEl.textContent = '📚 Good pacing — stay consistent'; msgEl.style.color = 'var(--ink3)'; }
+    else             { msgEl.textContent = 'Keep studying — you have time'; msgEl.style.color = 'var(--ink3)'; }
   }
+
+  if(btnEl) btnEl.textContent = '📅 Edit Date';
 }
 
-// ===== AUDIO PLAYER =====
-function apToggle() {
-  console.log('Audio toggle');
-}
+/* ═══════════════════════════════════════════════════════════
+   ACCESSIBILITY
+═══════════════════════════════════════════════════════════ */
+function toggleDys(){dys=!dys;document.body.classList.toggle('dys',dys);document.getElementById('t-dys').classList.toggle('on',dys);}
+function toggleWsp(){wsp=!wsp;document.body.classList.toggle('wsp',wsp);document.getElementById('t-wsp').classList.toggle('on',wsp);}
+function cycleFontSize(){document.body.classList.remove('fsl','fsx');fsz=(fsz+1)%3;if(fsz===1)document.body.classList.add('fsl');if(fsz===2)document.body.classList.add('fsx');document.getElementById('t-fs').textContent='Text: '+['Normal','Large','X-Large'][fsz];}
+function toggleHic(){hic=!hic;document.body.classList.toggle('hic',hic);document.getElementById('t-hic').classList.toggle('on',hic);}
 
-function apSkip(secs) {
-  console.log('Skip', secs, 'seconds');
-}
-
-function cycleSpeed() {
-  const speeds = [0.75, 1, 1.25, 1.5];
-  const idx = speeds.indexOf(STATE.currentAudioSpeed);
-  STATE.currentAudioSpeed = speeds[(idx + 1) % speeds.length];
-  document.getElementById('ap-spd').textContent = STATE.currentAudioSpeed + '×';
-}
-
-function scrubStart(event) {
-  console.log('Scrub start');
-}
-
-function scrubTouchStart(event) {
-  console.log('Touch scrub start');
-}
-
-// ===== FLASHCARDS =====
-function flipCard() {
-  const card = document.getElementById('fc');
-  if (card) card.classList.toggle('flip');
-}
-
-function nextCard() {
-  console.log('Next card');
-}
-
-function prevCard() {
-  console.log('Prev card');
-}
-
-function rateCard() {
-  console.log('Rate card');
-}
-
-function shuffleCards() {
-  console.log('Shuffle cards');
-}
-
-// ===== RENDERING =====
-function renderHome() {
-  const area = document.getElementById('content-area');
-  area.innerHTML = `
-    <div id="v-home" class="fa">
-      <h1>Series 63 Study Hub</h1>
-      <p>Welcome to your Series 63 exam preparation guide. Select a section from the sidebar to begin studying.</p>
-    </div>
-  `;
-}
-
-function renderSection(sectionId) {
-  console.log('Render section:', sectionId);
-}
-
-// ===== INITIALIZATION =====
-function loadState() {
-  const saved = {
-    dyslexic: localStorage.getItem('dyslexic') === 'true',
-    wideSpacing: localStorage.getItem('wideSpacing') !== 'false',
-    fontSize: localStorage.getItem('fontSize') || 'normal',
-    highContrast: localStorage.getItem('highContrast') === 'true'
-  };
-  
-  Object.assign(STATE, saved);
-  
-  if (STATE.dyslexic) { document.body.classList.add('dys'); document.getElementById('t-dys').classList.add('on'); }
-  if (!STATE.wideSpacing) { document.body.classList.remove('wsp'); document.getElementById('t-wsp').classList.remove('on'); }
-  if (STATE.fontSize === 'large') document.body.classList.add('fsl');
-  if (STATE.fontSize === 'xlarge') document.body.classList.add('fsx');
-  if (STATE.highContrast) { document.body.classList.add('hic'); document.getElementById('t-hic').classList.add('on'); }
-  
-  updateCountdown();
-}
-
-window.addEventListener('load', function() {
-  loadState();
-  initVoices();
-  renderHome();
-});
+/* ═══════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════ */
+buildSbNav();
+buildHome();
+updateOvr();
+cdInit();
+document.addEventListener('visibilitychange',()=>{if(document.hidden)apStop();});
+window.addEventListener('beforeunload',()=>synth&&synth.cancel());
 </script>
-
 </body>
 </html>
