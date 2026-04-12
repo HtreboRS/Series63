@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Series 63">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="msapplication-navbutton-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Series 63 — Pass Prep</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
@@ -74,12 +77,19 @@
 
 /* ── RESET ─────────────────────────────────────────────────── */
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-html { height:100%; overscroll-behavior:none; }
+html {
+height:100%;
+overscroll-behavior:none;
+background:#0a0a0f !important;
+background-color:#0a0a0f !important;
+}
 body {
 font-family:var(–font);
-background:var(–bg);
+background:#0a0a0f !important;
+background-color:#0a0a0f !important;
 color:var(–tx);
 min-height:100%;
+min-height:100vh;
 overscroll-behavior:none;
 -webkit-font-smoothing:antialiased;
 }
@@ -2890,6 +2900,32 @@ function renderReadSub(si, subI) {
   var sub = sec.subs[subI];
   var numStr = (si+1) + '.' + (subI+1);
 
+  // ── TTS BAR ───────────────────────────────────────────────
+  var ttsBar = document.createElement('div');
+  ttsBar.id = 'tts-bar';
+  var ttsPlay = document.createElement('button');
+  ttsPlay.id = 'tts-play';
+  ttsPlay.textContent = '▶';
+  ttsPlay.setAttribute('onclick', 'elToggle()');
+  var ttsInfo = document.createElement('div');
+  ttsInfo.id = 'tts-info';
+  var ttsStatus = document.createElement('div');
+  ttsStatus.id = 'tts-status';
+  ttsStatus.textContent = 'Tap ▶ to listen with ElevenLabs AI';
+  var ttsSpeed = document.createElement('div');
+  ttsSpeed.id = 'tts-speed';
+  var ttsSpeedBtn = document.createElement('button');
+  ttsSpeedBtn.id = 'tts-speed-btn';
+  ttsSpeedBtn.textContent = SPEEDS[elSpeedIdx] + 'x';
+  ttsSpeedBtn.setAttribute('onclick', 'apCycleSpeed()');
+  ttsSpeed.appendChild(ttsSpeedBtn);
+  ttsInfo.appendChild(ttsStatus);
+  ttsInfo.appendChild(ttsSpeed);
+  ttsBar.appendChild(ttsPlay);
+  ttsBar.appendChild(ttsInfo);
+  body.appendChild(ttsBar);
+  // ─────────────────────────────────────────────────────────
+
   var wrap = document.createElement('div');
   wrap.id = 'reading-wrap';
 
@@ -2905,6 +2941,9 @@ function renderReadSub(si, subI) {
     p.textContent = para;
     wrap.appendChild(p);
   });
+
+  // Load paragraphs into TTS engine (prefetches first para)
+  elLoad(si, subI, sub.paras.map(function(p) { return p; }));
 
   // Nav to next subsection
   var navRow = document.createElement('div');
@@ -3014,10 +3053,159 @@ function restoreA11y() {
   if (G.a11y.tts !== false) el('toggle-tts').classList.add('on');
 }
 
-// ── ElevenLabs TTS ───────────────────────────────────────────
-var elAudio = null;
+// ── ElevenLabs TTS ENGINE ──────────────────────────────────────
+var elAudio    = null;
 var elSpeedIdx = 1;
-function apStop() { if (elAudio) { elAudio.pause(); elAudio = null; } }
+var elCache    = {};   // key -> blob URL
+var elInflight = {};   // key -> Promise
+var elParaIdx  = 0;
+var elParas    = [];
+var elSI       = -1;
+var elSubI     = -1;
+var elPlaying  = false;
+
+function elKey(si, subI, pi) { return si + '_' + subI + '_' + pi; }
+
+function elFetch(text, key) {
+  if (elCache[key]) return Promise.resolve(elCache[key]);
+  if (elInflight[key]) return elInflight[key];
+  var p = fetch('https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': EL_KEY,
+      'Content-Type': 'application/json',
+      'Accept': 'audio/mpeg'
+    },
+    body: JSON.stringify({
+      text: text,
+      model_id: EL_MODEL,
+      voice_settings: { stability:0.5, similarity_boost:0.75, style:0.0, use_speaker_boost:true }
+    })
+  }).then(function(res) {
+    if (!res.ok) throw new Error('ElevenLabs error ' + res.status);
+    return res.blob();
+  }).then(function(blob) {
+    var url = URL.createObjectURL(blob);
+    elCache[key] = url;
+    delete elInflight[key];
+    return url;
+  });
+  elInflight[key] = p;
+  return p;
+}
+
+function elPrefetchNext(pi) {
+  var next = pi + 1;
+  if (next < elParas.length) {
+    var key = elKey(elSI, elSubI, next);
+    if (!elCache[key] && !elInflight[key]) elFetch(elParas[next], key);
+  }
+}
+
+function elPlayPara(pi) {
+  if (pi >= elParas.length) { elFinish(); return; }
+  if (!elPlaying) return;
+  elParaIdx = pi;
+  var key = elKey(elSI, elSubI, pi);
+  elSetStatus('⏳ Generating audio…', true);
+
+  elFetch(elParas[pi], key).then(function(url) {
+    if (!elPlaying) return;
+    if (elAudio) { try { elAudio.pause(); elAudio.src = ''; } catch(e) {} }
+    elAudio = new Audio(url);
+    elAudio.playbackRate = SPEEDS[elSpeedIdx];
+    var preview = elParas[pi].substring(0, 55) + (elParas[pi].length > 55 ? '…' : '');
+    elSetStatus(preview, true);
+    elHighlightPara(pi);
+    elAudio.addEventListener('ended', function() { if (elPlaying) elPlayPara(pi + 1); });
+    elAudio.addEventListener('error', function() {
+      showToast('Audio error — check your ElevenLabs API key');
+      elStop();
+    });
+    elAudio.play().catch(function(e) {
+      showToast('Tap play again to start audio');
+      elPlaying = false;
+      elSetStatus('Tap ▶ to listen', false);
+    });
+    elPrefetchNext(pi);
+  }).catch(function(err) {
+    showToast('ElevenLabs: ' + err.message);
+    elStop();
+  });
+}
+
+function elFinish() {
+  elPlaying = false;
+  elParaIdx = 0;
+  elHighlightPara(-1);
+  elSetStatus('Done — tap ▶ to replay', false);
+}
+
+function elStop() {
+  elPlaying = false;
+  if (elAudio) { try { elAudio.pause(); elAudio.src = ''; } catch(e) {} elAudio = null; }
+  elHighlightPara(-1);
+  elSetStatus('Tap ▶ to listen', false);
+  elParaIdx = 0;
+}
+
+function elToggle() {
+  if (!G.a11y.tts) { showToast('Enable AI Voice in Settings → Accessibility'); return; }
+  if (elParas.length === 0) { showToast('Open a topic to enable audio'); return; }
+  if (elPlaying) {
+    elPlaying = false;
+    if (elAudio) elAudio.pause();
+    elSetStatus('Paused — tap ▶ to resume', false);
+  } else {
+    elPlaying = true;
+    if (elAudio && elAudio.paused && elAudio.src) {
+      elAudio.play().catch(function() {});
+      var preview = elParas[elParaIdx] ? elParas[elParaIdx].substring(0, 55) + '…' : 'Playing…';
+      elSetStatus(preview, true);
+    } else {
+      elPlayPara(elParaIdx);
+    }
+  }
+}
+
+function elSetStatus(text, playing) {
+  var btn = el('tts-play');
+  if (btn) btn.textContent = playing ? '⏸' : '▶';
+  var st = el('tts-status');
+  if (st) st.textContent = text;
+}
+
+function elHighlightPara(pi) {
+  var cards = document.querySelectorAll('#reading-wrap .para-card');
+  for (var i = 0; i < cards.length; i++) {
+    if (i === pi) {
+      cards[i].style.background = 'rgba(124,92,252,0.14)';
+      cards[i].style.borderColor = 'rgba(124,92,252,0.4)';
+      cards[i].style.transition = 'all .2s';
+      cards[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      cards[i].style.background = '';
+      cards[i].style.borderColor = '';
+    }
+  }
+}
+
+function elLoad(si, subI, paras) {
+  elStop();
+  elSI = si;
+  elSubI = subI;
+  elParas = paras;
+  elParaIdx = 0;
+  elSetStatus('Tap ▶ to listen with ElevenLabs AI voice', false);
+  // Silently prefetch first paragraph so first play is near-instant
+  if (paras.length > 0) {
+    var key = elKey(si, subI, 0);
+    if (!elCache[key] && !elInflight[key]) elFetch(paras[0], key);
+  }
+}
+
+function apStop() { elStop(); }
+
 function apCycleSpeed() {
   elSpeedIdx = (elSpeedIdx + 1) % SPEEDS.length;
   if (elAudio) elAudio.playbackRate = SPEEDS[elSpeedIdx];
