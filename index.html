@@ -1239,7 +1239,17 @@ let subProgress = {};
 // Per-section flashcard state
 let fsz = 0, dys = false, wsp = true, hic = false;
 
-/* ── AUDIO ── */
+/* ── AUDIO STATE ── */
+let apPlaying  = false;
+let apElapsed  = 0;
+let apTotalSec = 0;
+let apTimer    = null;
+let apSpeed    = 1;
+const SPEEDS   = [0.75, 1, 1.25, 1.5, 1.75];
+let spIdx      = 1;
+let apFullText = '';
+let apAllWords = [];
+let apActiveU  = null;
 /* ═══════════════════════════════════════════════════════════
    ELEVENLABS VOICE ENGINE — clean, chunked, Safari-safe
    Uses <audio> element + blob URL — most compatible approach
@@ -1312,7 +1322,7 @@ async function elPlayChunk(text, voiceId, onChunkEnd, onError){
     });
     if(!res.ok){
       let errMsg = 'API error ' + res.status;
-      try{ const j=await res.json(); errMsg = j.detail?.message || j.detail || errMsg; }catch(e){}
+      try{ const j=await res.json(); errMsg = (j.detail && j.detail.message) || j.detail || errMsg; }catch(e){}
       onError(errMsg); return;
     }
     const blob = await res.blob();
@@ -1441,7 +1451,7 @@ function apSkip(s){
 /* Scrubber */
 let scrubbing=false;
 function scrubStart(e){
-  const was=apPlaying; if(was){apPause();synth.cancel();}
+  const was=apPlaying; if(was){apPause();elStop();}
   scrubMove(e);
   const mu=()=>{document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);if(was)setTimeout(()=>apPlay(),80);};
   const mm=(e2)=>scrubMove(e2);
@@ -1453,7 +1463,7 @@ function scrubMove(e){
   apElapsed=p*apTotalSec; updateScrubber(); updateTimeDisplay();
 }
 function scrubTouchStart(e){
-  const was=apPlaying; if(was){apPause();synth.cancel();}
+  const was=apPlaying; if(was){apPause();elStop();}
   scrubTouchMove(e);
   const mu=()=>{document.removeEventListener('touchmove',tm);document.removeEventListener('touchend',mu);if(was)setTimeout(()=>apPlay(),80);};
   const tm=(e2)=>scrubTouchMove(e2);
@@ -1471,7 +1481,7 @@ function cycleSpeed(){
   apTotalSec = Math.round(apAllWords.length / (130 * apSpeed / 60));
   document.getElementById('ap-spd').textContent = apSpeed + '×';
   updateTimeDisplay();
-  if(apPlaying){ const e2=apElapsed; apPause(); synth.cancel(); apElapsed=e2; setTimeout(()=>apPlay(),80); }
+  if(apPlaying){ const e2=apElapsed; apStop(); apElapsed=e2; setTimeout(()=>apPlay(),80); }
 }
 function updateScrubber(){
   const p=apTotalSec>0?Math.min(apElapsed/apTotalSec*100,100):0;
@@ -1498,35 +1508,42 @@ function clearHl(){} // highlight removed
    SIDEBAR / MOBILE
 ═══════════════════════════════════════════════════════════ */
 function openSidebar(){
-  document.getElementById('sidebar').classList.add('mobile-open');
-  document.getElementById('ov').classList.add('show');
-  document.body.style.overflow='hidden';
-  document.getElementById('sb-close').style.display='flex';
+  var sb=document.getElementById('sidebar');
+  var ov=document.getElementById('ov');
+  var sc=document.getElementById('sb-close');
+  if(sb) sb.classList.add('mobile-open');
+  if(ov) ov.classList.add('show');
+  if(document.body) document.body.style.overflow='hidden';
+  if(sc) sc.style.display='flex';
 }
 function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('mobile-open');
-  document.getElementById('ov').classList.remove('show');
-  document.body.style.overflow='';
+  var sb=document.getElementById('sidebar');
+  var ov=document.getElementById('ov');
+  if(sb) sb.classList.remove('mobile-open');
+  if(ov) ov.classList.remove('show');
+  if(document.body) document.body.style.overflow='';
 }
 
 /* ═══════════════════════════════════════════════════════════
    VIEWS
 ═══════════════════════════════════════════════════════════ */
 function showV(id){
-  ['v-home','v-section','v-prog','v-wrap'].forEach(v=>document.getElementById(v).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+  ['v-home','v-section','v-prog','v-wrap'].forEach(function(v){
+    var el=document.getElementById(v); if(el) el.classList.add('hidden');
+  });
+  var target=document.getElementById(id); if(target) target.classList.remove('hidden');
 }
 function setNI(secId,subId){
   document.querySelectorAll('.sb-sec-btn').forEach(b=>b.classList.remove('active-sec'));
   document.querySelectorAll('.sb-sub-item').forEach(b=>b.classList.remove('on'));
   if(secId){ const sb=document.querySelector('.sb-sec-btn[data-id="'+secId+'"]'); if(sb) sb.classList.add('active-sec'); }
-  if(subId){ const si=document.querySelector('.sb-sub-item[data-id="'+subId+'"]'); if(si){ si.classList.add('on'); si.scrollIntoView({block:'nearest',behavior:'smooth'}); } }
+  if(subId){ var si=document.querySelector('.sb-sub-item[data-id="'+subId+'"]'); if(si){ si.classList.add('on'); try{ si.scrollIntoView({block:'nearest',behavior:'smooth'}); }catch(e){} } }
 }
 function goHome(){
   apStop(); curSec=null;
   showV('v-home');
-  document.getElementById('tb-title').textContent='Series 63 Prep';
-  document.getElementById('tb-tabs').classList.add('hidden');
+  var tt=document.getElementById('tb-title'); if(tt) tt.textContent='Series 63 Prep';
+  var tabs=document.getElementById('tb-tabs'); if(tabs) tabs.classList.add('hidden');
   setNI(null,null); buildHome(); buildSbNav(); updateOvr(); closeSidebar();
 }
 function showProg(){
@@ -1542,14 +1559,15 @@ function showWrap(){
   renderWrap(); closeSidebar();
 }
 function openSection(i){
+  if(!TREE[i]) return;
   if(TREE[i].isWrap){ showWrap(); return; }
   apStop(); curSec=i;
-  const s=TREE[i];
+  var s=TREE[i];
   showV('v-section');
-  document.getElementById('tb-title').textContent=s.label;
-  document.getElementById('tb-tabs').classList.remove('hidden');
-  document.getElementById('sv-title').textContent=s.icon+' '+s.label;
-  document.getElementById('sv-desc').textContent=s.desc;
+  var tt=document.getElementById('tb-title'); if(tt) tt.textContent=s.label;
+  var tabs=document.getElementById('tb-tabs'); if(tabs) tabs.classList.remove('hidden');
+  var svt=document.getElementById('sv-title'); if(svt) svt.textContent=s.icon+' '+s.label;
+  var svd=document.getElementById('sv-desc'); if(svd) svd.textContent=s.desc;
   switchTab('learn'); closeSidebar();
 }
 
@@ -1558,10 +1576,10 @@ function openSection(i){
 ═══════════════════════════════════════════════════════════ */
 function switchTab(t){
   apStop(); tab=t;
-  ['learn','cards'].forEach(x=>document.getElementById('tc-'+x).classList.add('hidden'));
-  document.getElementById('tc-'+t).classList.remove('hidden');
-  document.getElementById('tab-l').classList.toggle('on',t==='learn');
-  document.getElementById('tab-c').classList.toggle('on',t==='cards');
+  ['learn','cards'].forEach(function(x){ var el=document.getElementById('tc-'+x); if(el) el.classList.add('hidden'); });
+  var tc=document.getElementById('tc-'+t); if(tc) tc.classList.remove('hidden');
+  var tl=document.getElementById('tab-l'); if(tl) tl.classList.toggle('on',t==='learn');
+  var tc2=document.getElementById('tab-c'); if(tc2) tc2.classList.toggle('on',t==='cards');
   if(t==='learn') showSubList();
   if(t==='cards') initCards();
 }
@@ -1605,18 +1623,19 @@ function showSubList(){
 
 function openSub(i){
   curSub=i;
-  document.getElementById('sub-list-view').classList.add('hidden');
-  document.getElementById('sub-detail-view').classList.remove('hidden');
+  var slv=document.getElementById('sub-list-view'); if(slv) slv.classList.add('hidden');
+  var sdv=document.getElementById('sub-detail-view'); if(sdv) sdv.classList.remove('hidden');
   renderSubLesson();
   initPlayer();
-  const s=TREE[curSec];
-  setNI(s.id,s.subs[i].id);
-  window.scrollTo({top:0,behavior:'smooth'});
+  if(curSec!==null&&TREE[curSec]&&TREE[curSec].subs[i]){
+    setNI(TREE[curSec].id, TREE[curSec].subs[i].id);
+  }
+  try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
 }
 function backToList(){
   apStop();
-  document.getElementById('sub-list-view').classList.remove('hidden');
-  document.getElementById('sub-detail-view').classList.add('hidden');
+  var slv=document.getElementById('sub-list-view'); if(slv) slv.classList.remove('hidden');
+  var sdv=document.getElementById('sub-detail-view'); if(sdv) sdv.classList.add('hidden');
   showSubList();
 }
 function nextSub(){
@@ -1682,16 +1701,104 @@ function renderSubLesson(){
 /* ═══════════════════════════════════════════════════════════
    AUDIO PLAYER INIT
 ═══════════════════════════════════════════════════════════ */
+function apBuildText(sb){
+  apFullText = sb.paragraphs.map(p=>p.trim()).join('  ');
+  apAllWords = apFullText.split(/\s+/);
+}
+
 function initPlayer(){
   apStop();
-  const sb=TREE[curSec].subs[curSub];
+  if(curSec===null||!TREE[curSec]||!TREE[curSec].subs[curSub]) return;
+  var sb=TREE[curSec].subs[curSub];
   apBuildText(sb);
   apTotalSec=Math.round(apAllWords.length/(130*apSpeed/60));
   apElapsed=0;
-  document.getElementById('ap-segs').innerHTML='';
+  var segs=document.getElementById('ap-segs'); if(segs) segs.innerHTML='';
   updateScrubber(); updateTimeDisplay();
-  document.getElementById('ap-dot').classList.remove('show');
-  document.getElementById('ap-now').textContent='Tap ▶ to hear this lesson read aloud';
+  var dot=document.getElementById('ap-dot'); if(dot) dot.classList.remove('show');
+  var now=document.getElementById('ap-now'); if(now) now.textContent='Tap ▶ to hear this lesson read aloud';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MINI QUIZ
+═══════════════════════════════════════════════════════════ */
+var mqA={}, mqS={}, mqCor=0, mqInc=0;
+
+function mqInit(){ mqA={}; mqS={}; mqCor=0; mqInc=0; }
+
+function mqSel(qi,oi){
+  if(mqS[qi]) return;
+  mqA[qi]=oi;
+  var sb=TREE[curSec].subs[curSub];
+  for(var _i=0;_i<sb.quiz[qi].opts.length;_i++){
+    var _el=document.getElementById('mq-'+qi+'-'+_i);
+    if(_el) _el.classList.remove('sel');
+  }
+  var _s=document.getElementById('mq-'+qi+'-'+oi); if(_s) _s.classList.add('sel');
+  var _b=document.getElementById('mqs-'+qi); if(_b) _b.classList.add('show');
+}
+
+function mqSubmit(qi){
+  if(mqS[qi]) return;
+  var sb=TREE[curSec].subs[curSub];
+  var q=sb.quiz[qi];
+  var sel=mqA[qi];
+  if(sel===undefined) return;
+  mqS[qi]=true;
+  var ok=(sel===q.cor);
+  if(ok) mqCor++; else mqInc++;
+  for(var _oi=0;_oi<q.opts.length;_oi++){
+    var _el=document.getElementById('mq-'+qi+'-'+_oi);
+    if(!_el) continue;
+    _el.classList.remove('sel'); _el.classList.add('done');
+    if(_oi===q.cor) _el.classList.add((ok&&_oi===sel)?'cor':'rev');
+    if(_oi===sel&&!ok) _el.classList.add('inc');
+  }
+  var _btn=document.getElementById('mqs-'+qi); if(_btn) _btn.style.display='none';
+  var _exp=document.getElementById('mqe-'+qi);
+  if(_exp){
+    _exp.innerHTML='<div class="mq-exp-lbl">'+(ok?'✅ Correct':'❌ Incorrect')+'</div>'+q.exp;
+    _exp.classList.add('show'); _exp.classList.add(ok?'e-c':'e-i');
+  }
+  var _cc=document.getElementById('mq-c'); if(_cc) _cc.textContent=String(mqCor);
+  var _ci=document.getElementById('mq-i'); if(_ci) _ci.textContent=String(mqInc);
+  var _cd=document.getElementById('mq-d'); if(_cd) _cd.textContent=String(Object.keys(mqS).length);
+  if(Object.keys(mqS).length===sb.quiz.length) setTimeout(mqShowResult,500);
+}
+
+function mqShowResult(){
+  var sb=TREE[curSec].subs[curSub];
+  var tot=sb.quiz.length, pct=Math.round(mqCor/tot*100);
+  var col=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
+  var msg=pct>=80?'Great work! Move to the next topic.':pct>=60?'Good — review and retry.':'Review the lesson and retake.';
+  var _rp=document.getElementById('mq-rpct'); if(_rp){_rp.textContent=pct+'%'; _rp.style.color=col;}
+  var _rm=document.getElementById('mq-rmsg'); if(_rm) _rm.textContent=msg;
+  var _rc=document.getElementById('mq-rc'); if(_rc) _rc.textContent=String(mqCor);
+  var _ri=document.getElementById('mq-ri'); if(_ri) _ri.textContent=String(mqInc);
+  var _rt=document.getElementById('mq-rt'); if(_rt) _rt.textContent=String(tot);
+  var _res=document.getElementById('mq-result');
+  if(_res){ _res.classList.add('show'); _res.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  subProgress[sb.id]={cor:mqCor,inc:mqInc,tot:tot,pct:pct};
+  updateOvr(); buildSbNav();
+}
+
+function mqRetake(){
+  var _res=document.getElementById('mq-result'); if(_res) _res.classList.remove('show');
+  mqInit();
+  var sb=TREE[curSec].subs[curSub];
+  for(var _qi=0;_qi<sb.quiz.length;_qi++){
+    for(var _oi=0;_oi<sb.quiz[_qi].opts.length;_oi++){
+      var _el=document.getElementById('mq-'+_qi+'-'+_oi);
+      if(_el) _el.className='mq-opt';
+    }
+    var _sb=document.getElementById('mqs-'+_qi);
+    if(_sb){ _sb.className='mq-submit'; _sb.style.display=''; }
+    var _ex=document.getElementById('mqe-'+_qi);
+    if(_ex){ _ex.className='mq-exp'; _ex.innerHTML=''; }
+  }
+  var _cc=document.getElementById('mq-c'); if(_cc) _cc.textContent='0';
+  var _ci=document.getElementById('mq-i'); if(_ci) _ci.textContent='0';
+  var _cd=document.getElementById('mq-d'); if(_cd) _cd.textContent='0';
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2037,7 +2144,7 @@ updateOvr();
 cdInit();
 elRestoreKey();
 document.addEventListener('visibilitychange',()=>{if(document.hidden)apStop();});
-window.addEventListener('beforeunload',()=>synth&&synth.cancel());
+window.addEventListener('beforeunload',()=>{ try{ elStop(); }catch(e){} });
 </script>
 
 </body>
