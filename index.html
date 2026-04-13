@@ -1241,513 +1241,169 @@ let fsz = 0, dys = false, wsp = true, hic = false;
 
 /* ── AUDIO ── */
 /* ═══════════════════════════════════════════════════════════
-   ELEVENLABS VOICE ENGINE
-   Free tier: 10,000 chars/month at elevenlabs.io
-   Streams audio via fetch → Web Audio API → works on Safari
+   ELEVENLABS VOICE ENGINE — clean, chunked, Safari-safe
+   Uses <audio> element + blob URL — most compatible approach
+   Splits text into ~800 char chunks to avoid timeouts
 ═══════════════════════════════════════════════════════════ */
 const EL_KEY_STORAGE = 's63_el_key';
-let elApiKey   = localStorage.getItem(EL_KEY_STORAGE) || '';
-let elAudioCtx = null;
-let elSource   = null;
-let elBuffer   = null;
-let elPlaying  = false;
+let elApiKey = localStorage.getItem(EL_KEY_STORAGE) || '';
 
-// Restore saved key into input on load
+// Audio state
+let elAudio    = null;   // <audio> element
+let elChunks   = [];     // text chunks to speak
+let elChunkIdx = 0;
+let elStopped  = false;
+
 function elRestoreKey(){
   const inp = document.getElementById('el-key-input');
-  if(inp && elApiKey){
-    inp.value = elApiKey;
-    elUpdateStatus(true);
-  }
+  if(inp && elApiKey){ inp.value = elApiKey; elUpdateStatus(true); }
 }
 function elKeyChanged(v){ elApiKey = v.trim(); }
 function elSaveKey(){
-  const val = document.getElementById('el-key-input').value.trim();
-  if(!val){ elSetStatus('⚠️ Paste your API key first', '#FCD34D'); return; }
+  const val = (document.getElementById('el-key-input').value||'').trim();
+  if(!val){ elSetStatus('⚠️ Paste your API key first','#FCD34D'); return; }
   elApiKey = val;
   localStorage.setItem(EL_KEY_STORAGE, val);
   elUpdateStatus(true);
 }
 function elUpdateStatus(saved){
-  if(saved && elApiKey){
-    elSetStatus('✅ Key saved — ready to play', '#4ADE80');
-  } else {
-    elSetStatus('', '');
-  }
+  elSetStatus(saved && elApiKey ? '✅ Key saved — tap ▶ to play' : '','#4ADE80');
 }
-function elSetStatus(msg, color){
+function elSetStatus(msg,color){
   const el = document.getElementById('el-status');
-  if(el){ el.textContent = msg; el.style.color = color; }
+  if(el){ el.textContent=msg; el.style.color=color||''; }
 }
 
-async function elSpeak(text, onEnd){
-  if(!elApiKey){
-    elSetStatus('⚠️ Add your ElevenLabs API key in settings (☰)', '#FCD34D');
-    // Fallback to browser TTS
-    const synth = window.speechSynthesis;
-    if(synth){
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = apSpeed * 0.92; u.pitch = 1; u.volume = 1;
-      u.onend = onEnd; u.onerror = onEnd;
-      synth.speak(u);
-    }
-    return;
+// Split text into natural sentence chunks ~800 chars each
+function elSplitChunks(text){
+  const sentences = text.match(/[^.!?]+[.!?]+[\s]*/g) || [text];
+  const chunks = [];
+  let cur = '';
+  for(const s of sentences){
+    if((cur+s).length > 800 && cur.length > 0){ chunks.push(cur.trim()); cur = s; }
+    else { cur += s; }
   }
+  if(cur.trim()) chunks.push(cur.trim());
+  return chunks.length ? chunks : [text.substring(0,800)];
+}
 
-  const voiceSel = document.getElementById('el-voice-sel');
-  const voiceId  = voiceSel ? voiceSel.value : '21m00Tcm4TlvDq8ikWAM';
+// Stop any playing audio
+function elStop(){
+  elStopped = true;
+  if(elAudio){ elAudio.pause(); elAudio.src=''; elAudio=null; }
+  elChunks=[]; elChunkIdx=0;
+}
 
-  elSetStatus('⏳ Loading audio…', '#93B4FD');
-
-  try {
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'audio/mpeg',
-        'Content-Type': 'application/json',
+// Fetch one chunk from ElevenLabs and play it
+async function elPlayChunk(text, voiceId, onChunkEnd, onError){
+  try{
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+      method:'POST',
+      headers:{
+        'Accept':'audio/mpeg',
+        'Content-Type':'application/json',
         'xi-api-key': elApiKey
       },
       body: JSON.stringify({
         text: text,
         model_id: 'eleven_turbo_v2',
-        voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.3, use_speaker_boost: true }
+        voice_settings:{ stability:0.45, similarity_boost:0.75, style:0.2, use_speaker_boost:true }
       })
     });
-
     if(!res.ok){
-      const err = await res.json().catch(()=>({detail:'Unknown error'}));
-      const msg = err.detail?.message || err.detail || 'API error';
-      elSetStatus('❌ ' + msg, '#FCA5A5');
-      if(onEnd) onEnd();
-      return;
+      let errMsg = 'API error ' + res.status;
+      try{ const j=await res.json(); errMsg = j.detail?.message || j.detail || errMsg; }catch(e){}
+      onError(errMsg); return;
     }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    // Reuse or create audio element
+    if(!elAudio){ elAudio = new Audio(); }
+    elAudio.src = url;
+    elAudio.playbackRate = apSpeed;
+    elAudio.onended  = ()=>{ URL.revokeObjectURL(url); onChunkEnd(); };
+    elAudio.onerror  = ()=>{ URL.revokeObjectURL(url); onError('Playback error'); };
+    elAudio.oncanplaythrough = ()=>{ elAudio.play().catch(e=>onError(e.message)); };
+    elAudio.load();
+  }catch(e){ onError(e.message||'Network error'); }
+}
 
-    const arrayBuffer = await res.arrayBuffer();
-
-    // Use Web Audio API — works on Safari
-    if(!elAudioCtx || elAudioCtx.state === 'closed'){
-      elAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// Play all chunks sequentially
+function elSpeakAll(text, onDone){
+  if(!elApiKey){
+    elSetStatus('⚠️ Open ☰ and add your ElevenLabs API key','#FCD34D');
+    // Fallback browser TTS
+    const synth = window.speechSynthesis;
+    if(synth){
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate=apSpeed*0.92; u.pitch=1; u.volume=1;
+      u.onend=onDone; u.onerror=onDone;
+      synth.speak(u);
     }
-    if(elAudioCtx.state === 'suspended') await elAudioCtx.resume();
-
-    elBuffer = await elAudioCtx.decodeAudioData(arrayBuffer);
-
-    elSource = elAudioCtx.createBufferSource();
-    elSource.buffer = elBuffer;
-    elSource.playbackRate.value = apSpeed;
-    elSource.connect(elAudioCtx.destination);
-
-    elSource.onended = function(){
-      elPlaying = false;
-      if(onEnd) onEnd();
-    };
-
-    const offset = apElapsed > 0 ? Math.min(apElapsed, elBuffer.duration) : 0;
-    elSource.start(0, offset);
-    elPlaying = true;
-    elSetStatus('🔊 Playing…', '#4ADE80');
-
-    // Update elapsed time via interval (set in apPlay)
-    apTotalSec = Math.round(elBuffer.duration);
-    updateTimeDisplay();
-
-  } catch(e) {
-    elSetStatus('❌ ' + (e.message||'Network error'), '#FCA5A5');
-    if(onEnd) onEnd();
+    return;
   }
-}
+  elStop();
+  elStopped = false;
+  const voiceSel = document.getElementById('el-voice-sel');
+  const voiceId  = voiceSel ? voiceSel.value : '21m00Tcm4TlvDq8ikWAM';
+  elChunks   = elSplitChunks(text);
+  elChunkIdx = 0;
 
-function elStop(){
-  if(elSource){
-    try{ elSource.stop(); }catch(e){}
-    elSource = null;
-  }
-  elPlaying = false;
-}
+  elSetStatus(`⏳ Loading… (${elChunks.length} part${elChunks.length>1?'s':''})`, '#93B4FD');
 
-function elPause(){
-  if(elAudioCtx && elAudioCtx.state === 'running'){
-    elAudioCtx.suspend();
-    elPlaying = false;
-  }
-}
-
-async function elResume(){
-  if(elAudioCtx && elAudioCtx.state === 'suspended'){
-    await elAudioCtx.resume();
-    elPlaying = true;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SIDEBAR / MOBILE
-═══════════════════════════════════════════════════════════ */
-function openSidebar(){
-  document.getElementById('sidebar').classList.add('mobile-open');
-  document.getElementById('ov').classList.add('show');
-  document.body.style.overflow='hidden';
-  document.getElementById('sb-close').style.display='flex';
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('mobile-open');
-  document.getElementById('ov').classList.remove('show');
-  document.body.style.overflow='';
-}
-
-/* ═══════════════════════════════════════════════════════════
-   VIEWS
-═══════════════════════════════════════════════════════════ */
-function showV(id){
-  ['v-home','v-section','v-prog','v-wrap'].forEach(v=>document.getElementById(v).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
-function setNI(secId,subId){
-  document.querySelectorAll('.sb-sec-btn').forEach(b=>b.classList.remove('active-sec'));
-  document.querySelectorAll('.sb-sub-item').forEach(b=>b.classList.remove('on'));
-  if(secId){
-    const sb = document.querySelector('.sb-sec-btn[data-id="'+secId+'"]');
-    if(sb) sb.classList.add('active-sec');
-  }
-  if(subId){
-    const si = document.querySelector('.sb-sub-item[data-id="'+subId+'"]');
-    if(si){ si.classList.add('on'); si.scrollIntoView({block:'nearest',behavior:'smooth'}); }
-  }
-}
-function goHome(){
-  apStop(); curSec=null;
-  showV('v-home');
-  document.getElementById('tb-title').textContent='Series 63 Prep';
-  document.getElementById('tb-tabs').classList.add('hidden');
-  buildHome();
-  setNI(null,null);
-  updateOvr();
-  closeSidebar();
-}
-function showProg(){
-  apStop(); showV('v-prog');
-  document.getElementById('tb-title').textContent='My Progress';
-  document.getElementById('tb-tabs').classList.add('hidden');
-  renderProg(); closeSidebar();
-}
-function showWrap(){
-  apStop(); showV('v-wrap');
-  document.getElementById('tb-title').textContent='Wrapping Up';
-  document.getElementById('tb-tabs').classList.add('hidden');
-  renderWrap(); closeSidebar();
-}
-function openSection(i){
-  if(TREE[i].isWrap){ showWrap(); return; }
-  apStop(); curSec=i;
-  const s=TREE[i];
-  showV('v-section');
-  document.getElementById('tb-title').textContent=s.label;
-  document.getElementById('tb-tabs').classList.remove('hidden');
-  document.getElementById('sv-title').textContent=s.icon+' '+s.label;
-  document.getElementById('sv-desc').textContent=s.desc;
-  switchTab('learn');
-  closeSidebar();
-}
-
-/* ═══════════════════════════════════════════════════════════
-   TABS
-═══════════════════════════════════════════════════════════ */
-function switchTab(t){
-  apStop(); tab=t;
-  ['learn','cards'].forEach(x=>document.getElementById('tc-'+x).classList.add('hidden'));
-  document.getElementById('tc-'+t).classList.remove('hidden');
-  document.getElementById('tab-l').classList.toggle('on',t==='learn');
-  document.getElementById('tab-c').classList.toggle('on',t==='cards');
-  if(t==='learn') showSubList();
-  if(t==='cards') initCards();
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SUBSECTION LIST
-═══════════════════════════════════════════════════════════ */
-function showSubList(){
-  document.getElementById('sub-list-view').classList.remove('hidden');
-  document.getElementById('sub-detail-view').classList.add('hidden');
-  const s = TREE[curSec];
-  let h='';
-  s.subs.forEach((sb,i)=>{
-    const wc = sb.paragraphs.join(' ').split(/\s+/).length;
-    const sec = Math.round(wc/(130*apSpeed/60));
-    const m=Math.floor(sec/60), sc=sec%60;
-    const p = subProgress[sb.id];
-    const numCls = p ? 'sub-num done' : 'sub-num';
-    const numTxt = p ? '✓' : (sb.num||String(i+1));
-    let qzPill = '';
-    if(sb.quiz && sb.quiz.length){
-      if(p){
-        const col = p.pct>=80?'done':'';
-        qzPill=`<span class="qz-pill ${col}">${p.pct}% on ${p.tot}Qs</span>`;
-      } else {
-        qzPill=`<span class="qz-pill">${sb.quiz.length}Q quiz</span>`;
-      }
-    }
-    h+=`<div class="sub-item fa" onclick="openSub(${i})" style="animation-delay:${i*.04}s">
-      <div class="sub-item-inner">
-        <div class="${numCls}">${numTxt}</div>
-        <div class="sub-meta">
-          <div class="sub-title">${sb.num ? sb.num+' '+sb.title : sb.title}</div>
-          <div class="sub-pills">
-            <span class="dur-pill">🕐 ${m}:${sc<10?'0':''}${sc}</span>
-            ${qzPill}
-          </div>
-        </div>
-        <div class="sub-arrow">›</div>
-      </div>
-    </div>`;
-  });
-  document.getElementById('sub-list').innerHTML = h;
-}
-
-function openSub(i){
-  curSub=i;
-  document.getElementById('sub-list-view').classList.add('hidden');
-  document.getElementById('sub-detail-view').classList.remove('hidden');
-  renderSubLesson();
-  initPlayer();
-  const s=TREE[curSec];
-  setNI(s.id, s.subs[i].id);
-  window.scrollTo({top:0,behavior:'smooth'});
-}
-function backToList(){
-  apStop();
-  document.getElementById('sub-list-view').classList.remove('hidden');
-  document.getElementById('sub-detail-view').classList.add('hidden');
-  showSubList(); // refresh progress badges
-}
-function nextSub(){
-  const s=TREE[curSec];
-  if(curSub<s.subs.length-1) openSub(curSub+1);
-  else switchTab('cards');
-}
-
-/* ═══════════════════════════════════════════════════════════
-   RENDER LESSON + INLINE MINI-QUIZ
-   Words are pre-wrapped in <span class="w"> at render time
-   so highlighting is CSS class toggle only — ZERO DOM reflow
-═══════════════════════════════════════════════════════════ */
-function renderSubLesson(){
-  const s=TREE[curSec], sb=s.subs[curSub];
-
-  // Sub-tabs
-  let tabH='';
-  s.subs.forEach((x,i)=>{
-    tabH+=`<button class="sub-tab${i===curSub?' on':''}" onclick="openSub(${i})">${x.num||String(i+1)} ${x.title}</button>`;
-  });
-  document.getElementById('sub-tabs').innerHTML=tabH;
-
-  const isLast = curSub===s.subs.length-1;
-  document.getElementById('btn-next-sub').textContent = isLast ? 'Go to Flashcards →' : 'Next Topic →';
-
-  // Lesson body — plain paragraphs, no word spans
-  let html=`<div class="lesson-wrap"><div class="lesson-h3">${sb.num ? sb.num+' — '+sb.title : sb.title}</div>`;
-  sb.paragraphs.forEach(para=>{
-    html+=`<p class="lesson-para">${para}</p>`;
-  });
-  html+='</div>';
-
-  // Inline mini-quiz
-  if(sb.quiz && sb.quiz.length){
-    const L=['A','B','C','D'];
-    const prev = subProgress[sb.id];
-    html+=`<div class="mini-quiz" id="mq-wrap">
-      <div class="mq-header">
-        <div class="mq-title-wrap">
-          <div class="mq-eyebrow">✅ Topic Quiz</div>
-          <div class="mq-title">${sb.title}</div>
-        </div>
-        <div class="mq-live">
-          <span class="mq-c">✓ <span id="mq-c">0</span></span>
-          <span style="color:var(--ghost)">·</span>
-          <span class="mq-i">✗ <span id="mq-i">0</span></span>
-          <span style="color:var(--ghost)">·</span>
-          <span class="mq-d"><span id="mq-d">0</span> done</span>
-        </div>
-      </div>`;
-    sb.quiz.forEach((q,qi)=>{
-      let opts='';
-      q.opts.forEach((o,oi)=>{
-        opts+=`<div class="mq-opt" id="mq-${qi}-${oi}" onclick="mqSel(${qi},${oi})">
-          <div class="mq-letter">${L[oi]}</div><div>${o}</div></div>`;
-      });
-      html+=`<div class="mq-q" id="mqq-${qi}">
-        <div class="mq-qnum">Question ${qi+1} of ${sb.quiz.length}</div>
-        <div class="mq-qtxt">${q.q}</div>
-        <div class="mq-opts">${opts}</div>
-        <button class="mq-submit" id="mqs-${qi}" onclick="mqSubmit(${qi})">Check Answer</button>
-        <div class="mq-exp" id="mqe-${qi}"></div>
-      </div>`;
+  function playNext(){
+    if(elStopped || elChunkIdx >= elChunks.length){ onDone(); return; }
+    const chunk = elChunks[elChunkIdx];
+    elSetStatus(`🔊 Part ${elChunkIdx+1}/${elChunks.length}`, '#4ADE80');
+    elPlayChunk(chunk, voiceId, ()=>{
+      elChunkIdx++;
+      // Update elapsed estimate
+      const chunkFraction = elChunkIdx / elChunks.length;
+      apElapsed = Math.round(chunkFraction * apTotalSec);
+      updateScrubber(); updateTimeDisplay();
+      playNext();
+    }, (err)=>{
+      elSetStatus('❌ '+err, '#FCA5A5');
+      apPlaying = false; setPlayIco(false); clearInterval(apTimer);
     });
-    html+=`<div class="mq-result" id="mq-result">
-      <div class="mq-rpct" id="mq-rpct">—</div>
-      <div class="mq-rmsg" id="mq-rmsg"></div>
-      <div class="mq-rbreakdown">
-        <div class="mq-rbd"><div class="n" id="mq-rc" style="color:var(--green)">—</div><div class="l">Correct</div></div>
-        <div class="mq-rbd"><div class="n" id="mq-ri" style="color:var(--red)">—</div><div class="l">Wrong</div></div>
-        <div class="mq-rbd"><div class="n" id="mq-rt">—</div><div class="l">Total</div></div>
-      </div>
-      <div class="mq-raction">
-        <button class="btn btn-s btn-sm" onclick="mqRetake()">🔄 Retake</button>
-        <button class="btn btn-p btn-sm" onclick="nextSub()">${isLast?'Flashcards →':'Next Topic →'}</button>
-      </div>
-    </div></div>`;
   }
-
-  document.getElementById('lesson-area').innerHTML = html;
-  mqInit();
-}
-
-/* ─── MINI QUIZ STATE ─── */
-let mqA={}, mqS={}, mqCor=0, mqInc=0;
-function mqInit(){ mqA={}; mqS={}; mqCor=0; mqInc=0; }
-function mqSel(qi,oi){
-  if(mqS[qi]) return;
-  mqA[qi]=oi;
-  const sb=TREE[curSec].subs[curSub];
-  sb.quiz[qi].opts.forEach((_,i)=>document.getElementById('mq-'+qi+'-'+i)?.classList.remove('sel'));
-  document.getElementById('mq-'+qi+'-'+oi)?.classList.add('sel');
-  document.getElementById('mqs-'+qi)?.classList.add('show');
-}
-function mqSubmit(qi){
-  if(mqS[qi]) return;
-  const sb=TREE[curSec].subs[curSub];
-  const q=sb.quiz[qi];
-  const sel=mqA[qi];
-  if(sel===undefined) return;
-  mqS[qi]=true;
-  const ok=sel===q.cor;
-  if(ok) mqCor++;else mqInc++;
-  q.opts.forEach((_,oi)=>{
-    const el=document.getElementById('mq-'+qi+'-'+oi);
-    if(!el) return;
-    el.classList.remove('sel');
-    el.classList.add('done');
-    if(oi===q.cor) el.classList.add(ok&&oi===sel?'cor':'rev');
-    if(oi===sel&&!ok) el.classList.add('inc');
-  });
-  document.getElementById('mqs-'+qi).style.display='none';
-  const expEl=document.getElementById('mqe-'+qi);
-  expEl.innerHTML=`<div class="mq-exp-lbl">${ok?'✅ Correct':'❌ Incorrect'}</div>${q.exp}`;
-  expEl.classList.add('show',ok?'e-c':'e-i');
-  // update live counters
-  document.getElementById('mq-c').textContent=mqCor;
-  document.getElementById('mq-i').textContent=mqInc;
-  document.getElementById('mq-d').textContent=Object.keys(mqS).length;
-  if(Object.keys(mqS).length===sb.quiz.length) setTimeout(mqShowResult,500);
-}
-function mqShowResult(){
-  const sb=TREE[curSec].subs[curSub];
-  const tot=sb.quiz.length, pct=Math.round(mqCor/tot*100);
-  const col=pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)';
-  const msg=pct>=80?"🎉 Excellent! Move to the next topic.":pct>=60?'📈 Good — review and retry if you want.':'📖 Review the lesson above and retake.';
-  document.getElementById('mq-rpct').textContent=pct+'%';
-  document.getElementById('mq-rpct').style.color=col;
-  document.getElementById('mq-rmsg').textContent=msg;
-  document.getElementById('mq-rc').textContent=mqCor;
-  document.getElementById('mq-ri').textContent=mqInc;
-  document.getElementById('mq-rt').textContent=tot;
-  document.getElementById('mq-result').classList.add('show');
-  document.getElementById('mq-result').scrollIntoView({behavior:'smooth',block:'nearest'});
-  // save progress
-  subProgress[sb.id]={cor:mqCor,inc:mqInc,tot,pct};
-  updateOvr();
-  buildSbNav();
-}
-function mqRetake(){
-  document.getElementById('mq-result').classList.remove('show');
-  mqInit();
-  // reset all options
-  const sb=TREE[curSec].subs[curSub];
-  sb.quiz.forEach((_,qi)=>{
-    _.opts.forEach((__,oi)=>{
-      const el=document.getElementById('mq-'+qi+'-'+oi);
-      if(el) el.className='mq-opt';
-    });
-    document.getElementById('mqs-'+qi)?.classList.remove('show');
-    const exp=document.getElementById('mqe-'+qi);
-    if(exp){ exp.className='mq-exp'; exp.innerHTML=''; }
-  });
-  document.getElementById('mq-c').textContent='0';
-  document.getElementById('mq-i').textContent='0';
-  document.getElementById('mq-d').textContent='0';
+  playNext();
 }
 
 /* ═══════════════════════════════════════════════════════════
-   AUDIO PLAYER
+   AUDIO PLAYER CONTROLS
 ═══════════════════════════════════════════════════════════ */
-function initPlayer(){
-  apStop();
-  const sb = TREE[curSec].subs[curSub];
-  apBuildText(sb);
-  apTotalSec = Math.round(apAllWords.length / (130 * apSpeed / 60));
-  apElapsed  = 0;
-  // No paragraph segments — single-utterance mode
-  document.getElementById('ap-segs').innerHTML = '';
-  updateScrubber(); updateTimeDisplay();
-  document.getElementById('ap-dot').classList.remove('show');
-  document.getElementById('ap-now').textContent = 'Tap ▶ to hear this lesson read aloud';
-}
-
-/* ── SINGLE-UTTERANCE AUDIO ENGINE ────────────────────────
-   Reads the ENTIRE subsection as one fluid speech.
-   No paragraph chopping = natural, human-sounding delivery.
-   −15s/+15s skip rebuilds the utterance from the new offset.
-──────────────────────────────────────────────────────── */
-let apFullText = '';
-let apAllWords = [];
-let apActiveU  = null;
-
-function apBuildText(sb){
-  // Double-space between paragraphs so TTS adds a natural pause
-  apFullText = sb.paragraphs.map(p => p.trim()).join('  ');
-  apAllWords  = apFullText.split(/\s+/);
-}
-
 function apToggle(){ if(apPlaying) apPause(); else apPlay(); }
 
 function apPlay(){
-  elStop();
+  if(apPlaying) return;
   apPlaying = true; setPlayIco(true);
-
   const dotEl = document.getElementById('ap-dot');
   const nowEl = document.getElementById('ap-now');
   if(dotEl) dotEl.classList.add('show');
-  if(nowEl) nowEl.textContent = apFullText.substring(0,70) + (apFullText.length>70?'\u2026':'');
+  if(nowEl) nowEl.textContent = apFullText.substring(0,60)+'…';
 
   clearInterval(apTimer);
   apTimer = setInterval(()=>{
     if(!apPlaying) return;
-    // Sync elapsed with Web Audio if available
-    if(elAudioCtx && elSource && elAudioCtx.state==='running'){
-      const audioElapsed = elAudioCtx.currentTime - (elSource._startAt||0) + (elSource._offset||0);
-      apElapsed = Math.min(audioElapsed, apTotalSec);
-    } else {
-      apElapsed = Math.min(apElapsed + 0.2, apTotalSec);
-    }
+    apElapsed = Math.min(apElapsed+0.2, apTotalSec);
     updateScrubber(); updateTimeDisplay();
   }, 200);
 
-  // Build text from elapsed position (word estimate)
+  // Start from current elapsed position
   const wpm = 130 * apSpeed;
-  const fromWord = Math.min(Math.round(apElapsed * wpm / 60), apAllWords.length - 1);
+  const fromWord = Math.min(Math.round(apElapsed * wpm / 60), apAllWords.length-1);
   const textToSpeak = apAllWords.slice(fromWord).join(' ');
 
-  elSpeak(textToSpeak, function(){
-    apPlaying = false;
-    setPlayIco(false);
+  elSpeakAll(textToSpeak, function(){
+    apPlaying = false; setPlayIco(false);
     clearInterval(apTimer);
     if(dotEl) dotEl.classList.remove('show');
-    if(nowEl) nowEl.textContent = 'Finished — press play to restart';
+    if(nowEl) nowEl.textContent = 'Finished — tap ▶ to replay';
     elSetStatus('', '');
     setTimeout(()=>{ apElapsed=0; updateScrubber(); updateTimeDisplay(); }, 1200);
   });
-
-  // Track start time for Web Audio sync
-  if(elSource) { elSource._startAt = elAudioCtx ? elAudioCtx.currentTime : 0; elSource._offset = apElapsed; }
 }
 
 function apDone(){
@@ -1758,30 +1414,29 @@ function apDone(){
 function apPause(){
   apPlaying = false; setPlayIco(false);
   clearInterval(apTimer);
-  elPause();
+  elStop(); // ElevenLabs audio can't be paused mid-stream reliably; stop and resume from position
   const dotEl = document.getElementById('ap-dot');
   if(dotEl) dotEl.classList.remove('show');
+  elSetStatus('Paused — tap ▶ to resume','#8A8EA6');
 }
 
 function apStop(){
+  apPlaying = false; clearInterval(apTimer);
   elStop();
-  apPlaying = false;
-  clearInterval(apTimer);
   const pb = document.getElementById('ap-play');
   const pd = document.getElementById('ap-dot');
   if(pb) setPlayIco(false);
   if(pd) pd.classList.remove('show');
-  elSetStatus('', '');
+  elSetStatus('','');
 }
 
 function apSkip(s){
   const was = apPlaying;
   apStop();
-  apElapsed = Math.max(0, Math.min(apElapsed + s, apTotalSec));
+  apElapsed = Math.max(0, Math.min(apElapsed+s, apTotalSec));
   updateScrubber(); updateTimeDisplay();
-  if(was) setTimeout(()=> apPlay(), 80);
+  if(was) setTimeout(()=>apPlay(), 150);
 }
-
 
 /* Scrubber */
 let scrubbing=false;
@@ -1838,6 +1493,206 @@ function setPlayIco(playing){
 }
 
 function clearHl(){} // highlight removed
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR / MOBILE
+═══════════════════════════════════════════════════════════ */
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('mobile-open');
+  document.getElementById('ov').classList.add('show');
+  document.body.style.overflow='hidden';
+  document.getElementById('sb-close').style.display='flex';
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('ov').classList.remove('show');
+  document.body.style.overflow='';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VIEWS
+═══════════════════════════════════════════════════════════ */
+function showV(id){
+  ['v-home','v-section','v-prog','v-wrap'].forEach(v=>document.getElementById(v).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function setNI(secId,subId){
+  document.querySelectorAll('.sb-sec-btn').forEach(b=>b.classList.remove('active-sec'));
+  document.querySelectorAll('.sb-sub-item').forEach(b=>b.classList.remove('on'));
+  if(secId){ const sb=document.querySelector('.sb-sec-btn[data-id="'+secId+'"]'); if(sb) sb.classList.add('active-sec'); }
+  if(subId){ const si=document.querySelector('.sb-sub-item[data-id="'+subId+'"]'); if(si){ si.classList.add('on'); si.scrollIntoView({block:'nearest',behavior:'smooth'}); } }
+}
+function goHome(){
+  apStop(); curSec=null;
+  showV('v-home');
+  document.getElementById('tb-title').textContent='Series 63 Prep';
+  document.getElementById('tb-tabs').classList.add('hidden');
+  setNI(null,null); buildHome(); buildSbNav(); updateOvr(); closeSidebar();
+}
+function showProg(){
+  apStop(); showV('v-prog');
+  document.getElementById('tb-title').textContent='My Progress';
+  document.getElementById('tb-tabs').classList.add('hidden');
+  renderProg(); closeSidebar();
+}
+function showWrap(){
+  apStop(); showV('v-wrap');
+  document.getElementById('tb-title').textContent='Wrapping Up';
+  document.getElementById('tb-tabs').classList.add('hidden');
+  renderWrap(); closeSidebar();
+}
+function openSection(i){
+  if(TREE[i].isWrap){ showWrap(); return; }
+  apStop(); curSec=i;
+  const s=TREE[i];
+  showV('v-section');
+  document.getElementById('tb-title').textContent=s.label;
+  document.getElementById('tb-tabs').classList.remove('hidden');
+  document.getElementById('sv-title').textContent=s.icon+' '+s.label;
+  document.getElementById('sv-desc').textContent=s.desc;
+  switchTab('learn'); closeSidebar();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════════════ */
+function switchTab(t){
+  apStop(); tab=t;
+  ['learn','cards'].forEach(x=>document.getElementById('tc-'+x).classList.add('hidden'));
+  document.getElementById('tc-'+t).classList.remove('hidden');
+  document.getElementById('tab-l').classList.toggle('on',t==='learn');
+  document.getElementById('tab-c').classList.toggle('on',t==='cards');
+  if(t==='learn') showSubList();
+  if(t==='cards') initCards();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SUBSECTION LIST
+═══════════════════════════════════════════════════════════ */
+function showSubList(){
+  document.getElementById('sub-list-view').classList.remove('hidden');
+  document.getElementById('sub-detail-view').classList.add('hidden');
+  const s=TREE[curSec];
+  let h='';
+  s.subs.forEach((sb,i)=>{
+    const wc=sb.paragraphs.join(' ').split(/\s+/).length;
+    const sec=Math.round(wc/(130*apSpeed/60));
+    const m=Math.floor(sec/60),sc=sec%60;
+    const p=subProgress[sb.id];
+    const numCls=p?'sub-num done':'sub-num';
+    const numTxt=p?'✓':(sb.num||String(i+1));
+    let qzPill='';
+    if(sb.quiz&&sb.quiz.length){
+      if(p){ const col=p.pct>=80?'done':''; qzPill=`<span class="qz-pill ${col}">${p.pct}% on ${p.tot}Qs</span>`; }
+      else { qzPill=`<span class="qz-pill">${sb.quiz.length}Q quiz</span>`; }
+    }
+    h+=`<div class="sub-item fa" onclick="openSub(${i})" style="animation-delay:${i*.04}s">
+      <div class="sub-item-inner">
+        <div class="${numCls}">${numTxt}</div>
+        <div class="sub-meta">
+          <div class="sub-title">${sb.num?sb.num+' '+sb.title:sb.title}</div>
+          <div class="sub-pills">
+            <span class="dur-pill">🕐 ${m}:${sc<10?'0':''}${sc}</span>
+            ${qzPill}
+          </div>
+        </div>
+        <div class="sub-arrow">›</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('sub-list').innerHTML=h;
+}
+
+function openSub(i){
+  curSub=i;
+  document.getElementById('sub-list-view').classList.add('hidden');
+  document.getElementById('sub-detail-view').classList.remove('hidden');
+  renderSubLesson();
+  initPlayer();
+  const s=TREE[curSec];
+  setNI(s.id,s.subs[i].id);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function backToList(){
+  apStop();
+  document.getElementById('sub-list-view').classList.remove('hidden');
+  document.getElementById('sub-detail-view').classList.add('hidden');
+  showSubList();
+}
+function nextSub(){
+  const s=TREE[curSec];
+  if(curSub<s.subs.length-1) openSub(curSub+1);
+  else switchTab('cards');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER LESSON
+═══════════════════════════════════════════════════════════ */
+function renderSubLesson(){
+  const s=TREE[curSec], sb=s.subs[curSub];
+  let tabH='';
+  s.subs.forEach((x,i)=>{
+    tabH+=`<button class="sub-tab${i===curSub?' on':''}" onclick="openSub(${i})">${x.num||String(i+1)} ${x.title}</button>`;
+  });
+  document.getElementById('sub-tabs').innerHTML=tabH;
+  const isLast=curSub===s.subs.length-1;
+  document.getElementById('btn-next-sub').textContent=isLast?'Go to Flashcards →':'Next Topic →';
+  let html=`<div class="lesson-wrap"><div class="lesson-h3">${sb.num?sb.num+' — '+sb.title:sb.title}</div>`;
+  sb.paragraphs.forEach(para=>{ html+=`<p class="lesson-para">${para}</p>`; });
+  html+='</div>';
+  if(sb.quiz&&sb.quiz.length){
+    const L=['A','B','C','D'];
+    html+=`<div class="mini-quiz" id="mq-wrap">
+      <div class="mq-header">
+        <div class="mq-title-wrap">
+          <div class="mq-eyebrow">✅ Topic Quiz</div>
+          <div class="mq-title">${sb.title}</div>
+        </div>
+        <div class="mq-live">
+          <span class="mq-c">✓ <span id="mq-c">0</span></span>
+          <span style="color:var(--ghost)">·</span>
+          <span class="mq-i">✗ <span id="mq-i">0</span></span>
+          <span style="color:var(--ghost)">·</span>
+          <span class="mq-d"><span id="mq-d">0</span> done</span>
+        </div>
+      </div>`;
+    sb.quiz.forEach((q,qi)=>{
+      let opts='';
+      q.opts.forEach((o,oi)=>{ opts+=`<div class="mq-opt" id="mq-${qi}-${oi}" onclick="mqSel(${qi},${oi})"><div class="mq-letter">${L[oi]}</div><div>${o}</div></div>`; });
+      html+=`<div class="mq-q" id="mqq-${qi}"><div class="mq-qnum">Question ${qi+1} of ${sb.quiz.length}</div><div class="mq-qtxt">${q.q}</div><div class="mq-opts">${opts}</div><button class="mq-submit" id="mqs-${qi}" onclick="mqSubmit(${qi})">Check Answer</button><div class="mq-exp" id="mqe-${qi}"></div></div>`;
+    });
+    html+=`<div class="mq-result" id="mq-result">
+      <div class="mq-rpct" id="mq-rpct">—</div>
+      <div class="mq-rmsg" id="mq-rmsg"></div>
+      <div class="mq-rbreakdown">
+        <div class="mq-rbd"><div class="n" id="mq-rc" style="color:var(--green)">—</div><div class="l">Correct</div></div>
+        <div class="mq-rbd"><div class="n" id="mq-ri" style="color:var(--red)">—</div><div class="l">Wrong</div></div>
+        <div class="mq-rbd"><div class="n" id="mq-rt">—</div><div class="l">Total</div></div>
+      </div>
+      <div class="mq-raction">
+        <button class="btn btn-s btn-sm" onclick="mqRetake()">🔄 Retake</button>
+        <button class="btn btn-p btn-sm" onclick="nextSub()">${isLast?'Flashcards →':'Next Topic →'}</button>
+      </div>
+    </div></div>`;
+  }
+  document.getElementById('lesson-area').innerHTML=html;
+  mqInit();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUDIO PLAYER INIT
+═══════════════════════════════════════════════════════════ */
+function initPlayer(){
+  apStop();
+  const sb=TREE[curSec].subs[curSub];
+  apBuildText(sb);
+  apTotalSec=Math.round(apAllWords.length/(130*apSpeed/60));
+  apElapsed=0;
+  document.getElementById('ap-segs').innerHTML='';
+  updateScrubber(); updateTimeDisplay();
+  document.getElementById('ap-dot').classList.remove('show');
+  document.getElementById('ap-now').textContent='Tap ▶ to hear this lesson read aloud';
+}
 
 /* ═══════════════════════════════════════════════════════════
    FLASHCARDS
