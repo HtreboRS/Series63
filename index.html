@@ -159,8 +159,7 @@ transition:background .12s,color .12s;}
 .tog.on{background:rgba(37,99,235,.2);border-color:var(–blue);color:#93B4FD}
 .voice-wrap{margin-top:8px}
 .voice-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(–sb-dim);margin-bottom:4px}
-.voice-sel{width:100%;background:var(–sb2);border:1px solid var(–sb-border);color:var(–sb-txt);border-radius:var(–r-sm);padding:7px 9px;font-size:11px;font-family:var(–font-sans);cursor:pointer;outline:none;-webkit-appearance:none}
-.voice-sel:focus{border-color:var(–blue)}
+#el-key-input::placeholder{color:var(–sb-dim)}
 
 /* ── MAIN PANEL ── */
 .main-panel{
@@ -368,10 +367,7 @@ box-shadow:0 2px 8px rgba(26,28,36,.08);
 .lesson-para{margin-bottom:14px;font-size:var(–fs);line-height:var(–lh);color:var(–ink2)}
 .lesson-para:last-child{margin-bottom:0}
 
-/* Pre-tokenized word spans — highlight = class toggle only, ZERO reflow */
-.w{display:inline;border-radius:3px;padding:1px 0;transition:background .07s,color .07s}
-.w.lit{background:rgba(37,99,235,.16);color:var(–ink);border-radius:3px}
-.w.past{color:var(–ghost)}
+/* word highlight removed */
 
 /* Key term highlight */
 .kt{background:rgba(37,99,235,.1);border:1px solid var(–blue-md);color:var(–ink2);border-radius:4px;padding:1px 5px;font-weight:700;font-size:.92em}
@@ -541,12 +537,24 @@ transition:border-color .11s,background .11s;min-height:46px;
       <button class="tog" id="t-hic" onclick="toggleHic()">High Contrast</button>
     </div>
     <div class="voice-wrap">
-      <div class="voice-lbl">🔊 Voice</div>
-      <select class="voice-sel" id="voice-sel" onchange="setVoice(this.value)">
-        <option>Loading voices…</option>
-      </select>
-      <div id="voice-note" style="font-size:10px;margin-top:5px;font-weight:700;letter-spacing:.02em;min-height:14px;"></div>
-      <div style="font-size:10px;color:var(--sb-dim);margin-top:3px;line-height:1.45;">Best quality: use <strong style="color:#93B4FD">Chrome</strong> on desktop or <strong style="color:#93B4FD">Safari</strong> on Mac/iPhone</div>
+      <div class="voice-lbl">🔊 ElevenLabs Voice</div>
+      <div style="font-size:10px;color:var(--sb-dim);line-height:1.5;margin-bottom:7px;">Human-sounding AI voice. Free tier: 10k chars/month.<br><a href="https://elevenlabs.io" target="_blank" style="color:#93B4FD">Get free API key →</a></div>
+      <input type="password" id="el-key-input" placeholder="Paste API key here"
+        style="width:100%;background:var(--sb2);border:1px solid var(--sb-border);color:var(--sb-txt);border-radius:var(--r-sm);padding:7px 9px;font-size:11px;font-family:var(--font-sans);outline:none;margin-bottom:6px;"
+        oninput="elKeyChanged(this.value)" />
+      <button onclick="elSaveKey()" style="width:100%;background:var(--blue);border:none;color:#fff;border-radius:var(--r-sm);padding:7px;font-size:11px;font-weight:700;font-family:var(--font-sans);cursor:pointer;margin-bottom:5px;">Save Key</button>
+      <div id="el-status" style="font-size:10px;font-weight:700;min-height:14px;letter-spacing:.02em;"></div>
+      <div style="margin-top:8px;">
+        <div class="voice-lbl" style="margin-bottom:4px;">Voice</div>
+        <select id="el-voice-sel" style="width:100%;background:var(--sb2);border:1px solid var(--sb-border);color:var(--sb-txt);border-radius:var(--r-sm);padding:7px 9px;font-size:11px;font-family:var(--font-sans);cursor:pointer;outline:none;-webkit-appearance:none;">
+          <option value="21m00Tcm4TlvDq8ikWAM">Rachel — calm, clear (default)</option>
+          <option value="EXAVITQu4vr4xnSDxMaL">Bella — warm, friendly</option>
+          <option value="ErXwobaYiN019PkySvjV">Antoni — smooth, professional</option>
+          <option value="VR6AewLTigWG4xSOukaG">Arnold — authoritative</option>
+          <option value="pNInz6obpgDQGcFmaJgB">Adam — deep, confident</option>
+          <option value="yoZ06aMxZJJ28mfd3POQ">Sam — natural, conversational</option>
+        </select>
+      </div>
     </div>
   </div>
 </aside>
@@ -1232,100 +1240,145 @@ let subProgress = {};
 let fsz = 0, dys = false, wsp = true, hic = false;
 
 /* ── AUDIO ── */
-const synth = window.speechSynthesis;
-let voice = null, allVoices = [];
-let apPlaying = false, apElapsed = 0, apTotalSec = 0, apTimer = null;
-let apSpeed = 1; const SPEEDS = [0.75,1,1.25,1.5,1.75]; let spIdx=1;
-let wordSpans = [], curWordIdx = -1;
-let chunks = [], curChunk = 0;
+/* ═══════════════════════════════════════════════════════════
+   ELEVENLABS VOICE ENGINE
+   Free tier: 10,000 chars/month at elevenlabs.io
+   Streams audio via fetch → Web Audio API → works on Safari
+═══════════════════════════════════════════════════════════ */
+const EL_KEY_STORAGE = 's63_el_key';
+let elApiKey   = localStorage.getItem(EL_KEY_STORAGE) || '';
+let elAudioCtx = null;
+let elSource   = null;
+let elBuffer   = null;
+let elPlaying  = false;
 
-/* ─── VOICE INIT ─── */
-/* ─── VOICE ENGINE ───────────────────────────────────────
-   ALLOWED: Google neural voices only (Chrome)
-   BLOCKED: All Microsoft voices (robotic)
-   BLOCKED: All Apple voices (robotic on web)
-   FALLBACK: Show a "use Chrome" message if no Google voice
-─────────────────────────────────────────────────────── */
-function scoreVoice(v) {
-  const n = v.name;
-  // BLOCK Microsoft — always robotic
-  if (n.toLowerCase().includes('microsoft')) return -1;
-  // BLOCK Apple system voices — sound robotic in browser TTS
-  if (['Samantha','Alex','Karen','Moira','Daniel','Tessa','Rishi','Nicky',
-       'Ava','Victoria','Allison','Susan','Zoe','Tom','Fred','Junior','Agnes',
-       'Bahh','Bells','Boing','Bubbles','Cellos','Deranged','Good News',
-       'Hysterical','Pipe Organ','Princess','Ralph','Trinoids','Whisper','Zarvox'
-      ].some(a => n.includes(a))) return -1;
-  if (n.toLowerCase().includes('com.apple')) return -1;
-  // ALLOW: Google voices — neural, sound human
-  if (n.includes('Google US English'))        return 100;
-  if (n.includes('Google UK English Female')) return 95;
-  if (n.includes('Google UK English Male'))   return 88;
-  if (n.startsWith('Google'))                 return 80;
-  // Everything else blocked
-  return -1;
+// Restore saved key into input on load
+function elRestoreKey(){
+  const inp = document.getElementById('el-key-input');
+  if(inp && elApiKey){
+    inp.value = elApiKey;
+    elUpdateStatus(true);
+  }
+}
+function elKeyChanged(v){ elApiKey = v.trim(); }
+function elSaveKey(){
+  const val = document.getElementById('el-key-input').value.trim();
+  if(!val){ elSetStatus('⚠️ Paste your API key first', '#FCD34D'); return; }
+  elApiKey = val;
+  localStorage.setItem(EL_KEY_STORAGE, val);
+  elUpdateStatus(true);
+}
+function elUpdateStatus(saved){
+  if(saved && elApiKey){
+    elSetStatus('✅ Key saved — ready to play', '#4ADE80');
+  } else {
+    elSetStatus('', '');
+  }
+}
+function elSetStatus(msg, color){
+  const el = document.getElementById('el-status');
+  if(el){ el.textContent = msg; el.style.color = color; }
 }
 
-function voiceLabel(v) {
-  const n = v.name;
-  if (n.includes('Google US English'))        return '⭐ Google US English (Best)';
-  if (n.includes('Google UK English Female')) return '⭐ Google UK English';
-  if (n.startsWith('Google'))                 return '✨ ' + n;
-  return n;
-}
-
-function loadVoices() {
-  allVoices = synth.getVoices();
-  if (!allVoices.length) return;
-
-  // Google-only filter
-  const googleV = allVoices
-    .map(v => ({ v, score: scoreVoice(v) }))
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .map(x => x.v);
-
-  const sel = document.getElementById('voice-sel');
-  const noteEl = document.getElementById('voice-note');
-  sel.innerHTML = '';
-
-  if (!googleV.length) {
-    sel.innerHTML = '<option value="">No Google voice — open in Chrome</option>';
-    if (noteEl) {
-      noteEl.textContent = '⚠️ Open in Chrome for human-sounding voice';
-      noteEl.style.color = '#FCD34D';
+async function elSpeak(text, onEnd){
+  if(!elApiKey){
+    elSetStatus('⚠️ Add your ElevenLabs API key in settings (☰)', '#FCD34D');
+    // Fallback to browser TTS
+    const synth = window.speechSynthesis;
+    if(synth){
+      synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = apSpeed * 0.92; u.pitch = 1; u.volume = 1;
+      u.onend = onEnd; u.onerror = onEnd;
+      synth.speak(u);
     }
-    voice = null;
     return;
   }
 
-  googleV.forEach((v, i) => {
-    const o = document.createElement('option');
-    o.value = v.name;
-    o.textContent = voiceLabel(v);
-    if (i === 0) { o.selected = true; voice = v; }
-    sel.appendChild(o);
-  });
+  const voiceSel = document.getElementById('el-voice-sel');
+  const voiceId  = voiceSel ? voiceSel.value : '21m00Tcm4TlvDq8ikWAM';
 
-  if (noteEl) {
-    noteEl.textContent = '✅ Google neural voice — sounds human';
-    noteEl.style.color = '#4ADE80';
+  elSetStatus('⏳ Loading audio…', '#93B4FD');
+
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': elApiKey
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_turbo_v2',
+        voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.3, use_speaker_boost: true }
+      })
+    });
+
+    if(!res.ok){
+      const err = await res.json().catch(()=>({detail:'Unknown error'}));
+      const msg = err.detail?.message || err.detail || 'API error';
+      elSetStatus('❌ ' + msg, '#FCA5A5');
+      if(onEnd) onEnd();
+      return;
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+
+    // Use Web Audio API — works on Safari
+    if(!elAudioCtx || elAudioCtx.state === 'closed'){
+      elAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if(elAudioCtx.state === 'suspended') await elAudioCtx.resume();
+
+    elBuffer = await elAudioCtx.decodeAudioData(arrayBuffer);
+
+    elSource = elAudioCtx.createBufferSource();
+    elSource.buffer = elBuffer;
+    elSource.playbackRate.value = apSpeed;
+    elSource.connect(elAudioCtx.destination);
+
+    elSource.onended = function(){
+      elPlaying = false;
+      if(onEnd) onEnd();
+    };
+
+    const offset = apElapsed > 0 ? Math.min(apElapsed, elBuffer.duration) : 0;
+    elSource.start(0, offset);
+    elPlaying = true;
+    elSetStatus('🔊 Playing…', '#4ADE80');
+
+    // Update elapsed time via interval (set in apPlay)
+    apTotalSec = Math.round(elBuffer.duration);
+    updateTimeDisplay();
+
+  } catch(e) {
+    elSetStatus('❌ ' + (e.message||'Network error'), '#FCA5A5');
+    if(onEnd) onEnd();
   }
 }
 
-function setVoice(name) {
-  const v = allVoices.find(v => v.name === name);
-  if (!v || scoreVoice(v) < 0) {
-    const noteEl = document.getElementById('voice-note');
-    if (noteEl) { noteEl.textContent = '🚫 Only Google voices allowed'; noteEl.style.color = '#FCA5A5'; }
-    return;
+function elStop(){
+  if(elSource){
+    try{ elSource.stop(); }catch(e){}
+    elSource = null;
   }
-  voice = v;
-  if (apPlaying) { apStop(); setTimeout(() => apPlay(), 80); }
+  elPlaying = false;
 }
 
-synth.onvoiceschanged = loadVoices;
-loadVoices();
+function elPause(){
+  if(elAudioCtx && elAudioCtx.state === 'running'){
+    elAudioCtx.suspend();
+    elPlaying = false;
+  }
+}
+
+async function elResume(){
+  if(elAudioCtx && elAudioCtx.state === 'suspended'){
+    await elAudioCtx.resume();
+    elPlaying = true;
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════
    SIDEBAR / MOBILE
@@ -1490,16 +1543,10 @@ function renderSubLesson(){
   const isLast = curSub===s.subs.length-1;
   document.getElementById('btn-next-sub').textContent = isLast ? 'Go to Flashcards →' : 'Next Topic →';
 
-  // Lesson body — tokenize words
-  let gw=0;
+  // Lesson body — plain paragraphs, no word spans
   let html=`<div class="lesson-wrap"><div class="lesson-h3">${sb.num ? sb.num+' — '+sb.title : sb.title}</div>`;
   sb.paragraphs.forEach(para=>{
-    html+='<p class="lesson-para">';
-    para.split(/(\s+)/).forEach(tok=>{
-      if(/^\s+$/.test(tok)) html+=tok;
-      else { html+=`<span class="w" data-wi="${gw}">${tok}</span>`; gw++; }
-    });
-    html+='</p>';
+    html+=`<p class="lesson-para">${para}</p>`;
   });
   html+='</div>';
 
@@ -1551,8 +1598,6 @@ function renderSubLesson(){
   }
 
   document.getElementById('lesson-area').innerHTML = html;
-  wordSpans = Array.from(document.querySelectorAll('#lesson-area .w'));
-  curWordIdx = -1;
   mqInit();
 }
 
@@ -1665,81 +1710,73 @@ function apBuildText(sb){
 function apToggle(){ if(apPlaying) apPause(); else apPlay(); }
 
 function apPlay(){
-  if(!synth){ alert('Text-to-speech not supported in this browser.'); return; }
-  synth.cancel();
-
-  // Calculate start-word from elapsed time
-  const wpm      = 130 * apSpeed;
-  const fromWord = Math.min(Math.round(apElapsed * wpm / 60), apAllWords.length - 1);
-  const slice    = apAllWords.slice(fromWord).join(' ');
-
-  const u = new SpeechSynthesisUtterance(slice);
-  u.rate   = apSpeed * 0.92;   // 0.92× = natural presenter pace
-  u.pitch  = 1.0;
-  u.volume = 1.0;
-  if(voice) u.voice = voice;
-  apActiveU = u;
+  elStop();
+  apPlaying = true; setPlayIco(true);
 
   const dotEl = document.getElementById('ap-dot');
   const nowEl = document.getElementById('ap-now');
   if(dotEl) dotEl.classList.add('show');
-  if(nowEl) nowEl.textContent = slice.substring(0,70) + (slice.length>70?'\u2026':'');
-
-  // Word-by-word highlight via onboundary
-  const avgCPW = slice.length / Math.max(apAllWords.slice(fromWord).length, 1);
-  u.onboundary = function(e){
-    if(e.name !== 'word') return;
-    const local  = Math.round(e.charIndex / Math.max(avgCPW, 1));
-    const global = fromWord + local;
-    hlWord(Math.min(global, wordSpans.length - 1));
-  };
-
-  u.onend   = function(){ if(apPlaying) apDone(); };
-  u.onerror = function(){ apPlaying=false; setPlayIco(false); clearInterval(apTimer); };
-
-  synth.speak(u);
-  apPlaying = true; setPlayIco(true);
+  if(nowEl) nowEl.textContent = apFullText.substring(0,70) + (apFullText.length>70?'\u2026':'');
 
   clearInterval(apTimer);
   apTimer = setInterval(()=>{
     if(!apPlaying) return;
-    apElapsed = Math.min(apElapsed + 0.2, apTotalSec);
+    // Sync elapsed with Web Audio if available
+    if(elAudioCtx && elSource && elAudioCtx.state==='running'){
+      const audioElapsed = elAudioCtx.currentTime - (elSource._startAt||0) + (elSource._offset||0);
+      apElapsed = Math.min(audioElapsed, apTotalSec);
+    } else {
+      apElapsed = Math.min(apElapsed + 0.2, apTotalSec);
+    }
     updateScrubber(); updateTimeDisplay();
   }, 200);
+
+  // Build text from elapsed position (word estimate)
+  const wpm = 130 * apSpeed;
+  const fromWord = Math.min(Math.round(apElapsed * wpm / 60), apAllWords.length - 1);
+  const textToSpeak = apAllWords.slice(fromWord).join(' ');
+
+  elSpeak(textToSpeak, function(){
+    apPlaying = false;
+    setPlayIco(false);
+    clearInterval(apTimer);
+    if(dotEl) dotEl.classList.remove('show');
+    if(nowEl) nowEl.textContent = 'Finished — press play to restart';
+    elSetStatus('', '');
+    setTimeout(()=>{ apElapsed=0; updateScrubber(); updateTimeDisplay(); }, 1200);
+  });
+
+  // Track start time for Web Audio sync
+  if(elSource) { elSource._startAt = elAudioCtx ? elAudioCtx.currentTime : 0; elSource._offset = apElapsed; }
 }
 
 function apDone(){
-  apPlaying = false; setPlayIco(false); clearHl();
+  apPlaying = false; setPlayIco(false);
   clearInterval(apTimer);
-  const dotEl = document.getElementById('ap-dot');
-  const nowEl = document.getElementById('ap-now');
-  if(dotEl) dotEl.classList.remove('show');
-  if(nowEl) nowEl.textContent = 'Finished — press play to restart';
-  setTimeout(()=>{ apElapsed=0; updateScrubber(); updateTimeDisplay(); }, 1500);
 }
 
 function apPause(){
-  synth.pause();
   apPlaying = false; setPlayIco(false);
   clearInterval(apTimer);
+  elPause();
   const dotEl = document.getElementById('ap-dot');
   if(dotEl) dotEl.classList.remove('show');
 }
 
 function apStop(){
-  if(synth) synth.cancel();
-  apActiveU  = null;
-  apPlaying  = false;
-  clearInterval(apTimer); clearHl();
+  elStop();
+  apPlaying = false;
+  clearInterval(apTimer);
   const pb = document.getElementById('ap-play');
   const pd = document.getElementById('ap-dot');
   if(pb) setPlayIco(false);
   if(pd) pd.classList.remove('show');
+  elSetStatus('', '');
 }
 
 function apSkip(s){
   const was = apPlaying;
-  apPause(); synth.cancel();
+  apStop();
   apElapsed = Math.max(0, Math.min(apElapsed + s, apTotalSec));
   updateScrubber(); updateTimeDisplay();
   if(was) setTimeout(()=> apPlay(), 80);
@@ -1800,22 +1837,7 @@ function setPlayIco(playing){
   ico.innerHTML=playing?'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>':'<polygon points="5,3 19,12 5,21"/>';
 }
 
-/* Word highlight — ZERO REFLOW (CSS class toggle only) */
-function hlWord(idx){
-  if(curWordIdx>=0 && curWordIdx<wordSpans.length) wordSpans[curWordIdx].classList.remove('lit');
-  for(let i=Math.max(0,idx-2);i<idx&&i<wordSpans.length;i++) wordSpans[i].classList.add('past');
-  curWordIdx=idx;
-  if(idx>=0 && idx<wordSpans.length){
-    const el=wordSpans[idx];
-    el.classList.add('lit'); el.classList.remove('past');
-    const r=el.getBoundingClientRect();
-    if(r.top<80||r.bottom>window.innerHeight-80) el.scrollIntoView({behavior:'smooth',block:'center'});
-  }
-}
-function clearHl(){
-  wordSpans.forEach(w=>w.classList.remove('lit','past'));
-  curWordIdx=-1;
-}
+function clearHl(){} // highlight removed
 
 /* ═══════════════════════════════════════════════════════════
    FLASHCARDS
@@ -2158,6 +2180,7 @@ buildSbNav();
 buildHome();
 updateOvr();
 cdInit();
+elRestoreKey();
 document.addEventListener('visibilitychange',()=>{if(document.hidden)apStop();});
 window.addEventListener('beforeunload',()=>synth&&synth.cancel());
 </script>
