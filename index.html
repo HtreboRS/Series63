@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover">
 <title>Series 63 Prep</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -44,10 +44,11 @@
 
 –r:    13px;
 –r-sm:  8px;
-–fs:   16.5px;
+–fs:   17px;
 –lh:   1.82;
 –ls:   0.01em;
 –sb-w: 272px;
+–cp:   32px;   /* content horizontal padding — shared by .content-area and .ap bleed */
 
 –font-sans: ‘Plus Jakarta Sans’, system-ui, sans-serif;
 –font-serif: ‘Lora’, Georgia, serif;
@@ -56,12 +57,13 @@
 /* ── ACCESSIBILITY ── */
 body.dys,body.dys *{font-family:‘OpenDyslexic’,var(–font-sans)!important}
 body.wsp{–ls:0.05em;–lh:2.08;word-spacing:.12em}
-body.fsl{–fs:19.5px} body.fsx{–fs:22.5px}
+body.fsl{–fs:20px} body.fsx{–fs:23px}
 body.hic{–paper:#fff;–paper2:#f0f0f0;–paper3:#e0e0e0;–card:#fff;–border:#bbb;–ink:#000;–ink2:#111;–ink3:#333}
 @font-face{font-family:‘OpenDyslexic’;src:url(‘https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/ttf/OpenDyslexic-Regular.ttf’) format(‘truetype’)}
 
+/* Prevent Safari from auto-scaling text */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html{scroll-behavior:smooth}
 body{background:#EEEBE3;background:var(–paper);color:#161820;color:var(–ink);font-family:var(–font-sans);font-size:var(–fs);line-height:var(–lh);letter-spacing:var(–ls);min-height:100vh;overflow-x:hidden}
 .hidden{display:none!important}
 .fa{animation:fadeUp .2s ease both}
@@ -157,9 +159,23 @@ transition:background .12s,color .12s;}
 .tog{padding:7px 4px;background:var(–sb2);border:1px solid var(–sb-border);border-radius:var(–r-sm);color:var(–sb-dim);cursor:pointer;font-size:10px;font-weight:700;font-family:var(–font-sans);text-align:center;transition:all .13s}
 .tog:hover{border-color:var(–blue);color:var(–blue)}
 .tog.on{background:rgba(37,99,235,.2);border-color:var(–blue);color:#93B4FD}
-.voice-wrap{margin-top:8px}
-.voice-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(–sb-dim);margin-bottom:4px}
-#el-key-input::placeholder{color:var(–sb-dim)}
+/* ── VOICE PICKER / ELEVENLABS ── */
+.vp-wrap{margin-top:10px;border-top:1px solid var(–sb-border);padding-top:10px}
+.vp-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(–sb-dim);margin-bottom:6px}
+.vp-sel{width:100%;background:var(–sb2);border:1px solid var(–sb-border);color:var(–sb-txt);border-radius:var(–r-sm);padding:6px 8px;font-size:11px;font-family:var(–font-sans);cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;margin-bottom:6px}
+.vp-key-wrap{position:relative;margin-bottom:6px}
+.vp-key{width:100%;background:var(–sb2);border:1px solid var(–sb-border);color:var(–sb-txt);border-radius:var(–r-sm);padding:6px 52px 6px 8px;font-size:11px;font-family:var(–font-sans);outline:none;-webkit-appearance:none}
+.vp-key::placeholder{color:var(–sb-dim)}
+.vp-key:focus{border-color:var(–blue)}
+.vp-key-save{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:var(–blue);border:none;color:#fff;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:700;font-family:var(–font-sans);cursor:pointer}
+.vp-row{display:flex;gap:6px;margin-bottom:4px}
+.vp-test{flex:1;background:var(–sb3);border:1px solid var(–sb-border);border-radius:var(–r-sm);color:var(–sb-txt);cursor:pointer;font-size:11px;font-weight:700;font-family:var(–font-sans);padding:6px 0;transition:border-color .13s;text-align:center}
+.vp-test:hover,.vp-test.on{border-color:var(–blue);color:#93B4FD}
+.vp-clear{background:var(–sb3);border:1px solid var(–sb-border);border-radius:var(–r-sm);color:var(–sb-dim);cursor:pointer;font-size:10px;font-weight:700;font-family:var(–font-sans);padding:6px 9px}
+.vp-note{font-size:10px;line-height:1.4;min-height:14px}
+.vp-note.ok{color:#4ADE80}
+.vp-note.warn{color:#FCD34D}
+.vp-note.dim{color:var(–sb-dim)}
 
 /* ── MAIN PANEL ── */
 .main-panel{
@@ -187,7 +203,7 @@ flex-shrink:0;
 .tbt.on{background:var(–blue);border-color:var(–blue);color:#fff}
 
 /* ── CONTENT ── */
-.content-area{flex:1;padding:28px 32px 60px;max-width:760px}
+.content-area{flex:1;width:100%;padding:28px var(–cp) 60px;max-width:760px}
 
 /* ── HOME ── */
 .home-hero{
@@ -321,7 +337,8 @@ background:#EEEBE3;
 background:var(–paper);
 border-bottom:2px solid #C4BDB2;
 border-bottom:2px solid var(–border);
-margin:0 -32px 20px;padding:10px 32px 12px;
+margin:0 calc(-1 * var(–cp)) 20px;
+padding:10px var(–cp) 12px;
 box-shadow:0 2px 8px rgba(26,28,36,.08);
 }
 .ap-segs{display:flex;gap:3px;margin-bottom:7px}
@@ -394,7 +411,7 @@ display:flex;align-items:flex-start;gap:10px;
 padding:11px 13px;background:#F4F1EA;background:var(–paper2);
 border:2px solid #C4BDB2;border:2px solid var(–border);
 border-radius:var(–r-sm);
-cursor:pointer;font-size:15px;line-height:1.5;color:#30333F;color:var(–ink2);
+cursor:pointer;font-size:var(–fs);line-height:var(–lh);color:#30333F;color:var(–ink2);
 transition:border-color .11s,background .11s;min-height:46px;
 }
 .mq-opt:hover:not(.done){border-color:var(–blue);background:var(–blue-lt);color:var(–ink)}
@@ -485,16 +502,87 @@ transition:border-color .11s,background .11s;min-height:46px;
 .btn-s{background:var(–card);border:1.5px solid var(–border);color:var(–ink2)} .btn-s:hover{border-color:var(–blue);color:var(–blue)}
 .btn-sm{padding:7px 14px;font-size:12px;min-height:36px}
 
-/* ── MOBILE ── */
+/* ══════════════════════════════════════════════
+MOBILE — iPhone-first, fully fluid layout
+iPhone 16 logical width: 393pt portrait
+══════════════════════════════════════════════ */
 @media(max-width:768px){
+/* ── Layout ── */
+:root{–cp:16px}
 .sidebar{transform:translateX(-100%)}
 .sidebar.mobile-open{transform:translateX(0)}
-.main-panel{margin-left:0}
+.main-panel{margin-left:0;width:100%}
 .tb-ham{display:flex;align-items:center;justify-content:center}
-.content-area{padding:18px 16px 50px}
-.ap{margin:0 -16px 18px;padding:10px 16px 12px}
-.stat-grid{grid-template-columns:1fr 1fr}
+
+/* ── Topbar: clear Dynamic Island ── */
+.topbar{
+padding-top:env(safe-area-inset-top);
+height:calc(56px + env(safe-area-inset-top));
 }
+
+/* ── Content area: full width, safe-area aware ── */
+.content-area{
+width:100%;
+max-width:100%;
+padding-top:16px;
+padding-bottom:calc(50px + env(safe-area-inset-bottom));
+padding-left:max(var(–cp), env(safe-area-inset-left));
+padding-right:max(var(–cp), env(safe-area-inset-right));
+}
+
+/* ── Audio player: clear safe-area-adjusted topbar ── */
+.ap{
+top:calc(56px + env(safe-area-inset-top));
+margin-bottom:16px;
+}
+
+/* ── Home ── */
+.home-hero{padding:18px 16px 16px}
+.hero-h1{font-size:clamp(20px,5.5vw,26px)}
+.hero-cd-days-num{font-size:30px}
+.home-progress-bar{padding:14px 16px}
+.home-sec-card{padding:12px 14px;gap:10px}
+.hsc-chips{gap:4px}
+
+/* ── Section / sub-list ── */
+.sec-view-header{margin-bottom:14px}
+.sec-view-h2{font-size:18px}
+.sub-item-inner{padding:12px 13px;gap:10px}
+.sub-title{font-size:13px}
+
+/* ── Lesson text ── */
+.lesson-wrap{padding:16px 15px 14px}
+.lesson-h3{font-size:16px;margin-bottom:10px;padding-bottom:8px}
+
+/* ── Quiz ── */
+.mq-q{padding:14px 13px}
+.mq-header{flex-direction:column;gap:6px;margin-bottom:14px}
+.mq-live{align-self:flex-start}
+.mq-opt{padding:10px 11px;gap:8px}
+.mq-letter{min-width:25px;height:25px;font-size:10px}
+.mq-submit{font-size:13px;min-height:42px}
+.mq-result{padding:18px 14px}
+.mq-rpct{font-size:50px}
+.mq-rbreakdown{gap:18px}
+
+/* ── Flashcards ── */
+.fc-wrap{height:clamp(180px,48vw,260px)}
+.cf{padding:20px}
+.fc-btn{padding:8px 14px;font-size:12.5px}
+
+/* ── Progress ── */
+.stat-grid{grid-template-columns:1fr 1fr}
+
+/* ── Wrapping Up ── */
+.wrap-stats{grid-template-columns:1fr 1fr}
+.wrap-stat .n{font-size:24px}
+
+/* ── Buttons ── */
+.btn{min-height:44px;font-size:13px}
+.btn-sm{min-height:38px;padding:7px 12px;font-size:12px}
+.sec-footer-btns{gap:7px}
+}
+
 @media(min-width:769px){.ov{display:none!important}}
 .ov{display:none;position:fixed;inset:0;background:rgba(26,28,36,.45);backdrop-filter:blur(3px);z-index:290}
 .ov.show{display:block}
@@ -534,25 +622,31 @@ transition:border-color .11s,background .11s;min-height:46px;
       <button class="tog" id="t-fs" onclick="cycleFontSize()">Text: Normal</button>
       <button class="tog" id="t-hic" onclick="toggleHic()">High Contrast</button>
     </div>
-    <div class="voice-wrap">
-      <div class="voice-lbl">🔊 ElevenLabs Voice</div>
-      <div style="font-size:10px;color:var(--sb-dim);line-height:1.5;margin-bottom:7px;">Human-sounding AI voice. Free tier: 10k chars/month.<br><a href="https://elevenlabs.io" target="_blank" style="color:#93B4FD">Get free API key →</a></div>
-      <input type="password" id="el-key-input" placeholder="Paste API key here"
-        style="width:100%;background:var(--sb2);border:1px solid var(--sb-border);color:var(--sb-txt);border-radius:var(--r-sm);padding:7px 9px;font-size:11px;font-family:var(--font-sans);outline:none;margin-bottom:6px;"
-        oninput="elKeyChanged(this.value)" />
-      <button onclick="elSaveKey()" style="width:100%;background:var(--blue);border:none;color:#fff;border-radius:var(--r-sm);padding:7px;font-size:11px;font-weight:700;font-family:var(--font-sans);cursor:pointer;margin-bottom:5px;">Save Key</button>
-      <div id="el-status" style="font-size:10px;font-weight:700;min-height:14px;letter-spacing:.02em;"></div>
-      <div style="margin-top:8px;">
-        <div class="voice-lbl" style="margin-bottom:4px;">Voice</div>
-        <select id="el-voice-sel" style="width:100%;background:var(--sb2);border:1px solid var(--sb-border);color:var(--sb-txt);border-radius:var(--r-sm);padding:7px 9px;font-size:11px;font-family:var(--font-sans);cursor:pointer;outline:none;-webkit-appearance:none;">
-          <option value="21m00Tcm4TlvDq8ikWAM">Rachel — calm, clear (default)</option>
-          <option value="EXAVITQu4vr4xnSDxMaL">Bella — warm, friendly</option>
-          <option value="ErXwobaYiN019PkySvjV">Antoni — smooth, professional</option>
-          <option value="VR6AewLTigWG4xSOukaG">Arnold — authoritative</option>
-          <option value="pNInz6obpgDQGcFmaJgB">Adam — deep, confident</option>
-          <option value="yoZ06aMxZJJ28mfd3POQ">Sam — natural, conversational</option>
-        </select>
+    <div class="vp-wrap">
+      <div class="vp-lbl">🔊 ElevenLabs Voice</div>
+      <!-- API Key -->
+      <div class="vp-key-wrap">
+        <input class="vp-key" id="vp-key" type="password"
+          placeholder="Paste ElevenLabs API key…"
+          oninput="elKeyInput(this.value)" />
+        <button class="vp-key-save" onclick="elSaveKey()">Save</button>
       </div>
+      <!-- Voice selector -->
+      <select class="vp-sel" id="vp-sel" onchange="elSaveVoice()">
+        <option value="21m00Tcm4TlvDq8ikWAM">Rachel — calm, clear (F)</option>
+        <option value="EXAVITQu4vr4xnSDxMaL">Bella — warm, friendly (F)</option>
+        <option value="MF3mGyEYCl7XYWbV9V6O">Elli — bright, expressive (F)</option>
+        <option value="pNInz6obpgDQGcFmaJgB">Adam — deep, confident (M)</option>
+        <option value="ErXwobaYiN019PkySvjV">Antoni — smooth, warm (M)</option>
+        <option value="TxGEqnHWrfWFTfGW9XjX">Josh — conversational (M)</option>
+        <option value="VR6AewLTigWG4xSOukaG">Arnold — authoritative (M)</option>
+      </select>
+      <!-- Actions -->
+      <div class="vp-row">
+        <button class="vp-test" id="vp-test" onclick="elPreview()">▶ Preview</button>
+        <button class="vp-clear" onclick="elClearKey()">Clear</button>
+      </div>
+      <div class="vp-note dim" id="vp-note">Add key to enable · fallback: device voice</div>
     </div>
   </div>
 </aside>
@@ -1249,84 +1343,137 @@ let apFullText = '';
 let apAllWords = [];
 let apActiveU  = null;
 /* ═══════════════════════════════════════════════════════════
-   ELEVENLABS VOICE ENGINE — clean, chunked, Safari-safe
-   Uses <audio> element + blob URL — most compatible approach
-   Splits text into ~800 char chunks to avoid timeouts
+   VOICE ENGINE
+   Primary:  ElevenLabs API (human-quality, requires API key)
+   Fallback: Web Speech API neural voices (device built-in)
+   Key + voice choice persisted in localStorage.
 ═══════════════════════════════════════════════════════════ */
-const EL_KEY_STORAGE = 's63_el_key';
-let elApiKey = localStorage.getItem(EL_KEY_STORAGE) || '';
 
-// Audio state
-let elAudio    = null;   // <audio> element
-let elChunks   = [];     // text chunks to speak
+/* ── ElevenLabs constants ── */
+const EL_KEY_K  = 's63_el_key';
+const EL_VOI_K  = 's63_el_voice';
+const EL_MODEL  = 'eleven_turbo_v2_5';   // fastest + highest quality
+const EL_URL    = v => `https://api.elevenlabs.io/v1/text-to-speech/${v}/stream`;
+
+let elKey      = localStorage.getItem(EL_KEY_K) || '';
+let elVoiceId  = localStorage.getItem(EL_VOI_K) || '21m00Tcm4TlvDq8ikWAM'; // Rachel default
+let elAudio    = null;   // current <audio> element
+let elChunks   = [];     // queued text chunks
 let elChunkIdx = 0;
 let elStopped  = false;
+let elOnDone   = null;
 
-function elRestoreKey(){
-  const inp = document.getElementById('el-key-input');
-  if(inp && elApiKey){ inp.value = elApiKey; elUpdateStatus(true); }
+/* ── Web Speech fallback ── */
+const synth = window.speechSynthesis;
+const NEURAL_PATTERNS = [
+  /microsoft.*online.*natural/i,
+  /microsoft.*(aria|jenny|guy|ana|davis|andrew|emma|ryan|sonia|libby|ava|steffan)/i,
+  /ava.*(premium|enhanced)/i,
+  /samantha.*(premium|enhanced)/i,
+  /nicky.*(premium|enhanced)/i,
+  /serena.*(premium|enhanced)/i,
+  /karen.*(premium|enhanced)/i,
+];
+function wsGetVoice(){
+  const voices = synth.getVoices().filter(v => /^en/i.test(v.lang));
+  const neural = voices.filter(v => NEURAL_PATTERNS.some(p => p.test(v.name)));
+  return neural.find(v => /aria/i.test(v.name))
+      || neural.find(v => /jenny/i.test(v.name))
+      || neural.find(v => /ava/i.test(v.name))
+      || (neural.length ? neural[0] : null)
+      || (voices.length ? voices[0] : null);
 }
-function elKeyChanged(v){ elApiKey = v.trim(); }
+synth.onvoiceschanged = function(){};
+
+/* ── Sidebar key/voice helpers ── */
+function elKeyInput(v){ elKey = v.trim(); }
+
 function elSaveKey(){
-  const val = (document.getElementById('el-key-input').value||'').trim();
-  if(!val){ elSetStatus('⚠️ Paste your API key first','#FCD34D'); return; }
-  elApiKey = val;
-  localStorage.setItem(EL_KEY_STORAGE, val);
-  elUpdateStatus(true);
-}
-function elUpdateStatus(saved){
-  elSetStatus(saved && elApiKey ? '✅ Key saved — tap ▶ to play' : '','#4ADE80');
-}
-function elSetStatus(msg,color){
-  const el = document.getElementById('el-status');
-  if(el){ el.textContent=msg; el.style.color=color||''; }
+  const inp = document.getElementById('vp-key');
+  const val = (inp ? inp.value : '').trim();
+  if(!val){ elSetNote('⚠️ Paste your API key first','warn'); return; }
+  elKey = val;
+  localStorage.setItem(EL_KEY_K, elKey);
+  elSetNote('✅ Key saved — tap ▶ Preview to test','ok');
 }
 
-// Split text into natural sentence chunks ~800 chars each
+function elSaveVoice(){
+  const sel = document.getElementById('vp-sel');
+  if(!sel) return;
+  elVoiceId = sel.value;
+  localStorage.setItem(EL_VOI_K, elVoiceId);
+}
+
+function elClearKey(){
+  elKey = '';
+  localStorage.removeItem(EL_KEY_K);
+  const inp = document.getElementById('vp-key');
+  if(inp) inp.value = '';
+  elSetNote('Key removed — using device voice','dim');
+}
+
+function elSetNote(msg, cls){
+  const el = document.getElementById('vp-note');
+  if(!el) return;
+  el.textContent = msg;
+  el.className = 'vp-note ' + (cls || 'dim');
+}
+
+function elRestoreUI(){
+  const inp = document.getElementById('vp-sel');
+  if(inp) inp.value = elVoiceId;
+  const keyInp = document.getElementById('vp-key');
+  if(keyInp && elKey) keyInp.value = elKey;
+  elSetNote(elKey ? '✅ Key loaded — ready to play' : 'Add key to enable · fallback: device voice',
+            elKey ? 'ok' : 'dim');
+}
+
+/* ── ElevenLabs chunker ── */
 function elSplitChunks(text){
-  const sentences = text.match(/[^.!?]+[.!?]+[\s]*/g) || [text];
-  const chunks = [];
-  let cur = '';
-  for(const s of sentences){
-    if((cur+s).length > 800 && cur.length > 0){ chunks.push(cur.trim()); cur = s; }
-    else { cur += s; }
+  const sents = text.match(/[^.!?]+[.!?]+\s*/g) || [text];
+  const chunks = []; let cur = '';
+  for(const s of sents){
+    if((cur+s).length > 900 && cur){ chunks.push(cur.trim()); cur = s; }
+    else cur += s;
   }
   if(cur.trim()) chunks.push(cur.trim());
-  return chunks.length ? chunks : [text.substring(0,800)];
+  return chunks.length ? chunks : [text.substring(0,900)];
 }
 
-// Stop any playing audio
+/* ── ElevenLabs stop ── */
 function elStop(){
   elStopped = true;
-  if(elAudio){ elAudio.pause(); elAudio.src=''; elAudio=null; }
-  elChunks=[]; elChunkIdx=0;
+  if(elAudio){ try{ elAudio.pause(); elAudio.src=''; }catch(e){} elAudio=null; }
+  elChunks=[]; elChunkIdx=0; elOnDone=null;
 }
 
-// Fetch one chunk from ElevenLabs and play it
-async function elPlayChunk(text, voiceId, onChunkEnd, onError){
+/* ── Play one EL chunk ── */
+async function elPlayChunk(text, onChunkEnd, onError){
+  if(elStopped){ onChunkEnd(); return; }
   try{
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`, {
+    const res = await fetch(EL_URL(elVoiceId), {
       method:'POST',
       headers:{
         'Accept':'audio/mpeg',
         'Content-Type':'application/json',
-        'xi-api-key': elApiKey
+        'xi-api-key': elKey
       },
       body: JSON.stringify({
-        text: text,
-        model_id: 'eleven_turbo_v2',
-        voice_settings:{ stability:0.45, similarity_boost:0.75, style:0.2, use_speaker_boost:true }
+        text,
+        model_id: EL_MODEL,
+        voice_settings:{ stability:0.48, similarity_boost:0.78, style:0.18, use_speaker_boost:true }
       })
     });
     if(!res.ok){
-      let errMsg = 'API error ' + res.status;
-      try{ const j=await res.json(); errMsg = (j.detail && j.detail.message) || j.detail || errMsg; }catch(e){}
-      onError(errMsg); return;
+      let msg = 'API error ' + res.status;
+      try{ const j=await res.json(); msg=(j.detail&&j.detail.message)||j.detail||msg; }catch(_){}
+      if(res.status===401) elSetNote('❌ Invalid API key — check and re-save','warn');
+      else elSetNote('❌ '+msg,'warn');
+      onError(msg); return;
     }
     const blob = await res.blob();
     const url  = URL.createObjectURL(blob);
-    // Reuse or create audio element
-    if(!elAudio){ elAudio = new Audio(); }
+    if(!elAudio) elAudio = new Audio();
     elAudio.src = url;
     elAudio.playbackRate = apSpeed;
     elAudio.onended  = ()=>{ URL.revokeObjectURL(url); onChunkEnd(); };
@@ -1336,47 +1483,58 @@ async function elPlayChunk(text, voiceId, onChunkEnd, onError){
   }catch(e){ onError(e.message||'Network error'); }
 }
 
-// Play all chunks sequentially
+/* ── Play all EL chunks in sequence ── */
 function elSpeakAll(text, onDone){
-  if(!elApiKey){
-    elSetStatus('⚠️ Open ☰ and add your ElevenLabs API key','#FCD34D');
-    // Fallback browser TTS
-    const synth = window.speechSynthesis;
-    if(synth){
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate=apSpeed*0.92; u.pitch=1; u.volume=1;
-      u.onend=onDone; u.onerror=onDone;
-      synth.speak(u);
-    }
-    return;
-  }
   elStop();
   elStopped = false;
-  const voiceSel = document.getElementById('el-voice-sel');
-  const voiceId  = voiceSel ? voiceSel.value : '21m00Tcm4TlvDq8ikWAM';
-  elChunks   = elSplitChunks(text);
+  elOnDone  = onDone;
+  elChunks  = elSplitChunks(text);
   elChunkIdx = 0;
-
-  elSetStatus(`⏳ Loading… (${elChunks.length} part${elChunks.length>1?'s':''})`, '#93B4FD');
-
-  function playNext(){
-    if(elStopped || elChunkIdx >= elChunks.length){ onDone(); return; }
-    const chunk = elChunks[elChunkIdx];
-    elSetStatus(`🔊 Part ${elChunkIdx+1}/${elChunks.length}`, '#4ADE80');
-    elPlayChunk(chunk, voiceId, ()=>{
-      elChunkIdx++;
-      // Update elapsed estimate
-      const chunkFraction = elChunkIdx / elChunks.length;
-      apElapsed = Math.round(chunkFraction * apTotalSec);
-      updateScrubber(); updateTimeDisplay();
-      playNext();
-    }, (err)=>{
-      elSetStatus('❌ '+err, '#FCA5A5');
-      apPlaying = false; setPlayIco(false); clearInterval(apTimer);
-    });
+  function next(){
+    if(elStopped || elChunkIdx >= elChunks.length){ if(onDone) onDone(); return; }
+    elPlayChunk(elChunks[elChunkIdx], ()=>{ elChunkIdx++; next(); },
+      (err)=>{
+        console.warn('EL error:', err);
+        apPlaying = false; setPlayIco(false); clearInterval(apTimer);
+      });
   }
-  playNext();
+  next();
+}
+
+/* ── ElevenLabs preview (sidebar button) ── */
+async function elPreview(){
+  if(!elKey){ elSetNote('⚠️ Paste and save an API key first','warn'); return; }
+  const btn = document.getElementById('vp-test');
+  if(btn){ btn.classList.add('on'); btn.textContent='⏳'; }
+  elStop(); elStopped=false;
+  await elPlayChunk(
+    'Hello! This is your Series 63 narrator. Tap play on any lesson to hear me read aloud.',
+    ()=>{ if(btn){ btn.classList.remove('on'); btn.textContent='▶ Preview'; } },
+    (err)=>{ if(btn){ btn.classList.remove('on'); btn.textContent='▶ Preview'; } }
+  );
+}
+
+/* ── ttsSpeak: EL if key present, Web Speech otherwise ── */
+function ttsSpeak(text, onDone){
+  if(elKey){
+    elSpeakAll(text, onDone);
+  } else {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='en-US'; u.rate=apSpeed; u.pitch=1; u.volume=1;
+    const v = wsGetVoice();
+    if(v) u.voice = v;
+    u.onend = onDone; u.onerror = onDone;
+    apActiveU = u;
+    synth.speak(u);
+  }
+}
+
+/* ── ttsStop: stop whichever engine is active ── */
+function ttsStop(){
+  elStop();
+  synth.cancel();
+  apActiveU = null;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1404,12 +1562,11 @@ function apPlay(){
   const fromWord = Math.min(Math.round(apElapsed * wpm / 60), apAllWords.length-1);
   const textToSpeak = apAllWords.slice(fromWord).join(' ');
 
-  elSpeakAll(textToSpeak, function(){
+  ttsSpeak(textToSpeak, function(){
     apPlaying = false; setPlayIco(false);
     clearInterval(apTimer);
     if(dotEl) dotEl.classList.remove('show');
     if(nowEl) nowEl.textContent = 'Finished — tap ▶ to replay';
-    elSetStatus('', '');
     setTimeout(()=>{ apElapsed=0; updateScrubber(); updateTimeDisplay(); }, 1200);
   });
 }
@@ -1422,20 +1579,18 @@ function apDone(){
 function apPause(){
   apPlaying = false; setPlayIco(false);
   clearInterval(apTimer);
-  elStop(); // ElevenLabs audio can't be paused mid-stream reliably; stop and resume from position
+  ttsStop();
   const dotEl = document.getElementById('ap-dot');
   if(dotEl) dotEl.classList.remove('show');
-  elSetStatus('Paused — tap ▶ to resume','#8A8EA6');
 }
 
 function apStop(){
   apPlaying = false; clearInterval(apTimer);
-  elStop();
+  ttsStop();
   const pb = document.getElementById('ap-play');
   const pd = document.getElementById('ap-dot');
   if(pb) setPlayIco(false);
   if(pd) pd.classList.remove('show');
-  elSetStatus('','');
 }
 
 function apSkip(s){
@@ -1449,7 +1604,7 @@ function apSkip(s){
 /* Scrubber */
 let scrubbing=false;
 function scrubStart(e){
-  const was=apPlaying; if(was){apPause();elStop();}
+  const was=apPlaying; if(was){apPause();ttsStop();}
   scrubMove(e);
   const mu=()=>{document.removeEventListener('mousemove',mm);document.removeEventListener('mouseup',mu);if(was)setTimeout(()=>apPlay(),80);};
   const mm=(e2)=>scrubMove(e2);
@@ -1461,7 +1616,7 @@ function scrubMove(e){
   apElapsed=p*apTotalSec; updateScrubber(); updateTimeDisplay();
 }
 function scrubTouchStart(e){
-  const was=apPlaying; if(was){apPause();elStop();}
+  const was=apPlaying; if(was){apPause();ttsStop();}
   scrubTouchMove(e);
   const mu=()=>{document.removeEventListener('touchmove',tm);document.removeEventListener('touchend',mu);if(was)setTimeout(()=>apPlay(),80);};
   const tm=(e2)=>scrubTouchMove(e2);
@@ -2139,9 +2294,9 @@ buildSbNav();
 buildHome();
 updateOvr();
 cdInit();
-elRestoreKey();
+elRestoreUI();
 document.addEventListener('visibilitychange',()=>{if(document.hidden)apStop();});
-window.addEventListener('beforeunload',()=>{ try{ elStop(); }catch(e){} });
+window.addEventListener('beforeunload',()=>{ try{ ttsStop(); }catch(e){} });
 </script>
 
 </body>
