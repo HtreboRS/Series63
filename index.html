@@ -1459,6 +1459,12 @@ let mqA = {}, mqS = {}, mqC = 0, mqI = 0;  // mini quiz
 
 /* audio */
 let apPlaying=false, apElapsed=0, apTotalSec=0, apTimer=null, apSpeed=1;
+/* Measured speaking rates (words per minute at 1.0x):
+   Web Speech device voices average ~155 wpm; ElevenLabs ~148 wpm.
+   These drive both the lesson-list estimate and the live player clock. */
+const WPM_WEBSPEECH = 155;
+const WPM_ELEVEN     = 148;
+function activeWPM(){ return (elKey ? WPM_ELEVEN : WPM_WEBSPEECH) * apSpeed; }
 const SPEEDS=[0.75,1,1.25,1.5,1.75]; let spIdx=1;
 let apFullText='', apAllWords=[], apActiveU=null;
 
@@ -1688,7 +1694,7 @@ function cdCancel(){ document.getElementById('cd-edit-row').classList.add('hidde
 ═══════════════════════════════════════════════════════════ */
 function estMin(sub){
   const words = sub.paragraphs.join(' ').split(/\s+/).length;
-  const sec = Math.round(words/130*60);
+  const sec = Math.round(words / activeWPM() * 60);
   return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
 }
 
@@ -2270,7 +2276,7 @@ function elStop(){
   elChunks=[];elChunkIdx=0;
 }
 
-async function elPlayChunk(text,onChunkEnd,onError){
+async function elPlayChunk(text,onChunkEnd,onError,onStart){
   if(elStopped){onChunkEnd();return;}
   try{
     const res=await fetch(EL_URL(S.elVoice),{
@@ -2291,6 +2297,7 @@ async function elPlayChunk(text,onChunkEnd,onError){
     if(!elAudio)elAudio=new Audio();
     elAudio.src=url;
     elAudio.playbackRate=apSpeed;
+    elAudio.onplaying=()=>{ if(onStart)onStart(); };
     elAudio.onended=()=>{URL.revokeObjectURL(url);onChunkEnd();};
     elAudio.onerror=()=>{URL.revokeObjectURL(url);onError('Playback error');};
     elAudio.oncanplaythrough=()=>{elAudio.play().catch(e=>onError(e.message));};
@@ -2298,13 +2305,15 @@ async function elPlayChunk(text,onChunkEnd,onError){
   }catch(e){onError(e.message||'Network error');}
 }
 
-function elSpeakAll(text,onDone){
+function elSpeakAll(text,onDone,onStart){
   elStop();elStopped=false;
   elChunks=elSplitChunks(text);elChunkIdx=0;
+  let started=false;
+  const fireStart=()=>{ if(!started){ started=true; if(onStart)onStart(); } };
   function next(){
     if(elStopped||elChunkIdx>=elChunks.length){if(onDone)onDone();return;}
     elPlayChunk(elChunks[elChunkIdx],()=>{elChunkIdx++;next();},
-      ()=>{apPlaying=false;setPlayIco(false);clearInterval(apTimer);});
+      ()=>{apPlaying=false;setPlayIco(false);clearInterval(apTimer);}, fireStart);
   }
   next();
 }
@@ -2321,14 +2330,15 @@ async function elPreview(){
   );
 }
 
-function ttsSpeak(text,onDone){
-  if(elKey){elSpeakAll(text,onDone);}
+function ttsSpeak(text,onDone,onStart){
+  if(elKey){elSpeakAll(text,onDone,onStart);}
   else{
     synth.cancel();
     const u=new SpeechSynthesisUtterance(text);
     u.lang='en-US';u.rate=apSpeed;u.pitch=1;u.volume=1;
     const v=wsGetVoice();
     if(v)u.voice=v;
+    u.onstart=()=>{ if(onStart)onStart(); };
     u.onend=onDone;u.onerror=onDone;
     apActiveU=u;
     synth.speak(u);
@@ -2348,7 +2358,7 @@ function initPlayer(){
   if(curSec===null||!TREE[curSec]||!TREE[curSec].subs[curSub])return;
   const sub=TREE[curSec].subs[curSub];
   apBuildText(sub);
-  apTotalSec=Math.round(apAllWords.length/(130*apSpeed/60));
+  apTotalSec=Math.round(apAllWords.length/activeWPM()*60);
   apElapsed=0;
   updateScrubber();updateTimeDisplay();
   const dot=document.getElementById('ap-dot');if(dot)dot.classList.remove('show');
@@ -2358,25 +2368,40 @@ function apToggle(){if(apPlaying)apPause();else apPlay();}
 function apPlay(){
   if(apPlaying)return;
   apPlaying=true;setPlayIco(true);
+  /* recompute total against the active engine's real rate each play */
+  apTotalSec=Math.round(apAllWords.length/activeWPM()*60);
   const dotEl=document.getElementById('ap-dot');
   const nowEl=document.getElementById('ap-now');
-  if(dotEl)dotEl.classList.add('show');
-  if(nowEl)nowEl.textContent=apFullText.substring(0,60)+'…';
+  /* show "preparing" until audio actually starts — no fake ticking during the gap */
+  if(nowEl)nowEl.textContent=elKey?'Preparing audio…':'Starting…';
   clearInterval(apTimer);
-  apTimer=setInterval(()=>{
-    if(!apPlaying)return;
-    apElapsed=Math.min(apElapsed+0.2,apTotalSec);
-    updateScrubber();updateTimeDisplay();
-  },200);
-  const wpm=130*apSpeed;
-  const fromWord=Math.min(Math.round(apElapsed*wpm/60),apAllWords.length-1);
-  ttsSpeak(apAllWords.slice(fromWord).join(' '),function(){
-    apPlaying=false;setPlayIco(false);
+
+  const startClock=()=>{
+    if(!apPlaying)return;            /* user may have paused during load */
+    if(dotEl)dotEl.classList.add('show');
+    if(nowEl)nowEl.textContent=apFullText.substring(0,60)+'…';
     clearInterval(apTimer);
-    if(dotEl)dotEl.classList.remove('show');
-    if(nowEl)nowEl.textContent='Finished — tap ▶ to replay';
-    setTimeout(()=>{apElapsed=0;updateScrubber();updateTimeDisplay();},1200);
-  });
+    apTimer=setInterval(()=>{
+      if(!apPlaying)return;
+      apElapsed=Math.min(apElapsed+0.2,apTotalSec);
+      updateScrubber();updateTimeDisplay();
+    },200);
+  };
+
+  const wpm=activeWPM();
+  const fromWord=Math.min(Math.round(apElapsed*wpm/60),apAllWords.length-1);
+  ttsSpeak(
+    apAllWords.slice(fromWord).join(' '),
+    function(){   /* onDone */
+      apPlaying=false;setPlayIco(false);
+      clearInterval(apTimer);
+      if(dotEl)dotEl.classList.remove('show');
+      if(nowEl)nowEl.textContent='Finished — tap ▶ to replay';
+      apElapsed=apTotalSec;updateScrubber();updateTimeDisplay();
+      setTimeout(()=>{ if(!apPlaying){apElapsed=0;updateScrubber();updateTimeDisplay();} },1200);
+    },
+    startClock   /* onStart — fires the instant real audio begins */
+  );
   bumpStreak();
 }
 function apPause(){
@@ -2435,7 +2460,7 @@ function cycleSpeed(){
   apSpeed=SPEEDS[spIdx];
   /* preserve position fraction across speed change */
   const frac=apTotalSec?apElapsed/apTotalSec:0;
-  apTotalSec=Math.round(apAllWords.length/(130*apSpeed/60));
+  apTotalSec=Math.round(apAllWords.length/activeWPM()*60);
   apElapsed=frac*apTotalSec;
   document.getElementById('ap-speed').textContent=apSpeed+'×';
   if(elAudio)elAudio.playbackRate=apSpeed;
